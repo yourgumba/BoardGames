@@ -1,0 +1,26 @@
+{
+  "id": "/BoardGames/dice-roller",
+  "name": "Dice Roller",
+  "short_name": "Dice",
+  "description": "Roll any mix of dice, d4 to d100",
+  "start_url": "./Dice_Roller.html",
+  "scope": "./Dice_Roller.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#6d28d9",
+  "theme_color": "#6d28d9",
+  "icons": [
+    {
+      "src": "icon-dice-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-dice-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

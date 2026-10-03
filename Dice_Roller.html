@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest-dice.json">
+<meta name="theme-color" content="#6d28d9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-dice-192.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dice Roller</title>
+<style>
+  /* Self-contained: no outside files. */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; color: #fff; touch-action: manipulation;
+    font-family: ui-rounded, "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(circle at top, #4c1d95 0%, #0f172a 70%);
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+             max(18px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  h1 { margin: 0; font-size: 24px; letter-spacing: .06em; text-transform: uppercase; }
+  .small { background: #1e293b; border: 1px solid #475569; border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 700; text-decoration: none; color: #fff; }
+  h2 { margin: 16px 0 8px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #a5b4fc; }
+
+  /* Dice shapes (used in the picker and in results) */
+  .die { position: relative; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #0f172a; border: 0; }
+  .d4   { background: #f87171; clip-path: polygon(50% 4%, 97% 94%, 3% 94%); padding-top: 22%; }
+  .d6   { background: #fb923c; border-radius: 18%; }
+  .d8   { background: #facc15; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .d10  { background: #4ade80; clip-path: polygon(50% 0, 97% 38%, 50% 100%, 3% 38%); }
+  .d12  { background: #38bdf8; clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%); }
+  .d20  { background: #a78bfa; clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); }
+  .d100 { background: #f472b6; border-radius: 50%; }
+
+  /* Picker */
+  .picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .cell { background: rgba(15,23,42,.7); border: 1px solid #334155; border-radius: 14px; padding: 8px 4px; text-align: center; }
+  .cell.on { border-color: #fbbf24; }
+  .pick { width: 52px; height: 52px; font-size: 15px; margin: 0 auto 6px; }
+  .pick:active { transform: scale(.9); }
+  .ctl { display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .ctl button, .mod button { width: 30px; height: 30px; border-radius: 50%; border: 0; background: #334155; font-size: 18px; font-weight: 900; line-height: 1; }
+  .ctl button:active, .mod button:active { background: #475569; }
+  .ctl span { min-width: 22px; font-weight: 900; font-size: 18px; color: #fbbf24; }
+
+  .mod { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; background: rgba(15,23,42,.7); border: 1px solid #334155; border-radius: 14px; padding: 8px 14px; }
+  .mod .ctl span { min-width: 44px; font-size: 20px; }
+  #pool { flex: 1; font-weight: 800; font-size: 15px; color: #e0e7ff; }
+  .clear { background: transparent; border: 1px solid #64748b; border-radius: 10px; padding: 6px 12px; font-size: 13px; font-weight: 700; }
+
+  .roll { width: 100%; margin-top: 14px; padding: 18px; background: #fbbf24; color: #000; border: 0; border-bottom: 6px solid #d97706;
+          border-radius: 18px; font-size: 26px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+  .roll:active { transform: scale(.97); }
+  .roll:disabled { opacity: .4; }
+
+  /* Results */
+  #results { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; min-height: 20px; }
+  #results .die { width: 62px; height: 62px; font-size: 22px; }
+  #results .die.rolling { animation: shake .15s linear infinite; }
+  #results .die.crit { box-shadow: none; filter: drop-shadow(0 0 8px #fde047) drop-shadow(0 0 3px #fff); }
+  #results .die.fail { filter: drop-shadow(0 0 8px #ef4444); opacity: .85; }
+  @keyframes shake { 0% { transform: rotate(-8deg) scale(1.03); } 50% { transform: rotate(8deg) scale(.97); } 100% { transform: rotate(-8deg) scale(1.03); } }
+  #total { text-align: center; font-size: 64px; font-weight: 900; line-height: 1; margin-top: 12px; color: #fde68a; min-height: 64px; }
+  #note { text-align: center; font-weight: 900; letter-spacing: .08em; min-height: 22px; margin-top: 2px; }
+  #note.crit { color: #fde047; } #note.fail { color: #fca5a5; }
+  #break { text-align: center; font-size: 14px; color: #c7d2fe; line-height: 1.6; margin-top: 6px; }
+  #hist { list-style: none; margin: 0; padding: 0; font-size: 14px; color: #cbd5e1; }
+  #hist li { display: flex; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid #1e293b; }
+  #hist b { color: #fde68a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>&#127922; Dice Roller</h1>
+    <button class="small" id="soundBtn" onclick="toggleSound()">&#128276; Sound</button>
+  </header>
+
+  <h2>1. Pick your dice (tap a die to add one)</h2>
+  <div class="picker" id="picker"></div>
+
+  <div class="mod">
+    <span style="font-weight:800">Modifier</span>
+    <div class="ctl"><button onclick="setMod(-1)">&minus;</button><span id="modVal">0</span><button onclick="setMod(1)">+</button></div>
+  </div>
+
+  <div class="mod">
+    <div id="pool">No dice yet</div>
+    <button class="clear" onclick="clearPool()">Clear</button>
+  </div>
+
+  <button class="roll" id="rollBtn" onclick="roll()">Roll!</button>
+
+  <h2>Result</h2>
+  <div id="results"></div>
+  <div id="total"></div>
+  <div id="note"></div>
+  <div id="break"></div>
+
+  <h2>Recent rolls</h2>
+  <ul id="hist"></ul>
+</div>
+
+<script>
+  /* ---------- SETTINGS ---------- */
+  const DICE = [4, 6, 8, 10, 12, 20, 100];   // add or remove die types here
+  const MAX_PER_TYPE = 20;
+
+  /* ---------- STATE (saved on the phone) ---------- */
+  const KEY = "dice_roller_v1";
+  let counts = {}, mod = 0, history = [], soundOn = true, rolling = false;
+  DICE.forEach(n => counts[n] = 0);
+  const $ = id => document.getElementById(id);
+
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ counts, mod, history, soundOn })); } catch (e) {} }
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (!s) return;
+      DICE.forEach(n => counts[n] = (s.counts && s.counts[n]) || 0);
+      mod = s.mod || 0; history = s.history || []; soundOn = s.soundOn !== false;
+    } catch (e) {}
+  }
+
+  /* Fair random number from 1 to n (uses the phone's secure random generator) */
+  function rnd(n) {
+    const limit = Math.floor(4294967296 / n) * n, a = new Uint32Array(1);
+    do { crypto.getRandomValues(a); } while (a[0] >= limit);
+    return a[0] % n + 1;
+  }
+
+  /* ---------- PICKER ---------- */
+  function buildPicker() {
+    $("picker").innerHTML = DICE.map(n => `
+      <div class="cell" id="cell${n}">
+        <button class="die d${n} pick" onclick="add(${n}, 1)">d${n}</button>
+        <div class="ctl"><button onclick="add(${n}, -1)">&minus;</button><span id="n${n}">0</span><button onclick="add(${n}, 1)">+</button></div>
+      </div>`).join("");
+  }
+  function add(n, step) { counts[n] = Math.max(0, Math.min(MAX_PER_TYPE, counts[n] + step)); update(); save(); buzz(8); }
+  function setMod(step) { mod = Math.max(-99, Math.min(99, mod + step)); update(); save(); }
+  function clearPool() { DICE.forEach(n => counts[n] = 0); mod = 0; update(); save(); }
+
+  const modText = m => m ? (m > 0 ? ` + ${m}` : ` \u2212 ${-m}`) : "";
+  function poolText() {
+    const parts = DICE.filter(n => counts[n]).map(n => `${counts[n]}d${n}`);
+    return parts.length ? parts.join(" + ") + modText(mod) : "No dice yet";
+  }
+  function update() {
+    DICE.forEach(n => { $("n" + n).textContent = counts[n]; $("cell" + n).classList.toggle("on", counts[n] > 0); });
+    $("modVal").textContent = (mod > 0 ? "+" : "") + mod;
+    $("pool").textContent = poolText();
+    $("rollBtn").disabled = !DICE.some(n => counts[n]);
+    $("soundBtn").innerHTML = soundOn ? "&#128276; Sound" : "&#128277; Muted";
+  }
+
+  /* ---------- ROLLING ---------- */
+  function roll() {
+    if (rolling || !DICE.some(n => counts[n])) return;
+    rolling = true; wake();
+    const groups = DICE.filter(n => counts[n]).map(n => ({ n, vals: Array.from({ length: counts[n] }, () => rnd(n)) }));
+    const el = [];
+    $("results").innerHTML = "";
+    groups.forEach(g => g.vals.forEach(v => {
+      const d = document.createElement("div");
+      d.className = `die d${g.n} rolling`; d.textContent = rnd(g.n);
+      $("results").appendChild(d); el.push({ d, g, v });
+    }));
+    $("total").textContent = ""; $("note").textContent = ""; $("note").className = ""; $("break").textContent = "";
+    rattle();
+
+    let ticks = 0;
+    const timer = setInterval(() => {
+      el.forEach(x => x.d.textContent = rnd(x.g.n));
+      if (++ticks >= 10) { clearInterval(timer); finish(groups, el); }
+    }, 70);
+  }
+
+  function finish(groups, el) {
+    el.forEach(x => {
+      x.d.textContent = x.v; x.d.classList.remove("rolling");
+      if (x.g.n === 20 && x.v === 20) x.d.classList.add("crit");
+      if (x.g.n === 20 && x.v === 1) x.d.classList.add("fail");
+    });
+    const total = groups.reduce((s, g) => s + g.vals.reduce((a, b) => a + b, 0), 0) + mod;
+    $("total").textContent = total;
+
+    const d20 = groups.find(g => g.n === 20);
+    if (d20 && d20.vals.includes(20)) { $("note").textContent = "\u2605 NATURAL 20! \u2605"; $("note").className = "crit"; buzz([40, 50, 40, 50, 80]); }
+    else if (d20 && d20.vals.includes(1)) { $("note").textContent = "Natural 1..."; $("note").className = "fail"; }
+
+    const lines = groups.map(g => `${g.vals.length}d${g.n}: ${g.vals.join(" + ")}${g.vals.length > 1 ? " = " + g.vals.reduce((a, b) => a + b, 0) : ""}`);
+    if (mod) lines.push(`Modifier: ${mod > 0 ? "+" : "\u2212"}${Math.abs(mod)}`);
+    $("break").innerHTML = lines.join("<br>");
+
+    history.unshift({ pool: poolText(), total }); history = history.slice(0, 6);
+    renderHistory(); save(); rolling = false;
+  }
+
+  function renderHistory() {
+    $("hist").innerHTML = history.map(h => `<li><span>${h.pool}</span><b>${h.total}</b></li>`).join("") || "<li>Nothing yet</li>";
+  }
+
+  /* ---------- EXTRAS: sound, buzz, screen awake ---------- */
+  let audio = null;
+  function rattle() {
+    buzz([20, 40, 20, 40, 20]);
+    if (!soundOn) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      for (let i = 0; i < 6; i++) {
+        const t = audio.currentTime + i * 0.11, o = audio.createOscillator(), g = audio.createGain();
+        o.type = "square"; o.frequency.setValueAtTime(180 + Math.random() * 300, t);
+        g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+        o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + 0.08);
+      }
+    } catch (e) {}
+  }
+  function buzz(p) { if (soundOn && navigator.vibrate) navigator.vibrate(p); }   // Android only
+  function toggleSound() { soundOn = !soundOn; update(); save(); }
+
+  let lock = null;
+  async function wake() { try { if ("wakeLock" in navigator) lock = await navigator.wakeLock.request("screen"); } catch (e) {} }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") wake(); });
+
+  /* ---------- START ---------- */
+  load(); buildPicker(); update(); renderHistory();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
+</body>
+</html>
