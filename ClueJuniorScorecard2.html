@@ -5,384 +5,278 @@
 <meta name="theme-color" content="#b45309">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="icon-clue-junior-192.png">
-  
- <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Clue Junior - Digital Detective Scorecard</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- FontAwesome for fallback UI icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clue Junior - Digital Detective Scorecard</title>
+<style>
+  /* This version needs no outside files (no Tailwind, no Font Awesome, no web fonts). */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; touch-action: manipulation;
+    font-family: ui-rounded, "Nunito", "Segoe UI", system-ui, sans-serif;
+    background-color: #0f172a;
+    background-image: radial-gradient(#334155 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+    padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+             max(16px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
 
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #0f172a;
-      background-image: radial-gradient(#334155 1.5px, transparent 1.5px);
-      background-size: 24px 24px;
-      touch-action: manipulation;
-    }
+  /* Top bar */
+  .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+         color: #cbd5e1; font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #34d399; margin-right: 8px; }
+  .reset { background: #e11d48; color: #fff; border: 1px solid #fb7185; border-radius: 12px;
+           font: inherit; font-size: 12px; padding: 9px 16px; cursor: pointer; }
+  .reset:active { transform: scale(.95); }
 
-    .font-game {
-      font-family: 'Fredoka One', cursive, sans-serif;
-    }
+  /* Paper sheet */
+  .sheet { position: relative; background: #fdfbf7; border: 2px solid #cbd5e1; border-radius: 18px;
+           padding: 22px 12px 14px; box-shadow: 0 20px 30px -10px rgba(0,0,0,.5); }
+  .sheet::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 10px;
+    border-radius: 16px 16px 0 0;
+    background: repeating-linear-gradient(90deg, #475569, #475569 18px, #1e293b 18px, #1e293b 36px); }
+  .title { text-align: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px dashed #cbd5e1; }
+  .logo { display: inline-block; background: #f59e0b; color: #fff; border: 2px solid #d97706; border-radius: 14px;
+          padding: 4px 18px; font-size: 30px; font-weight: 900; letter-spacing: .06em; transform: rotate(-1deg); }
+  .logo small { font-size: 22px; color: #fef3c7; }
+  .hint { margin-top: 8px; display: inline-block; background: #fef3c7; border: 1px solid #fcd34d;
+          color: #78350f; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
 
-    /* Paper Pad Visual Aesthetics */
-    .paper-sheet {
-      background: #fdfbf7;
-      box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5), 0 10px 15px -5px rgba(0, 0, 0, 0.3);
-      position: relative;
-    }
+  /* Sections and tiles */
+  .sections { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+  .sec-head { display: flex; justify-content: space-between; align-items: center; border: 2px solid;
+              border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
+  .sec-head h3 { margin: 0; font-size: 16px; letter-spacing: .04em; }
+  .count { font-size: 12px; font-weight: 800; }
+  .yellow { background: #fef08a; border-color: #eab308; color: #713f12; }
+  .blue   { background: #bae6fd; border-color: #0284c7; color: #0c4a6e; }
+  .grey   { background: #f1f5f9; border-color: #64748b; color: #1e293b; }
+  .purple { background: #f5d0fe; border-color: #c084fc; color: #581c87; }
 
-    /* Notepad Top Binding Effect */
-    .paper-sheet::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 10px;
-      background: repeating-linear-gradient(
-        90deg,
-        #475569,
-        #475569 18px,
-        #1e293b 18px,
-        #1e293b 36px
-      );
-      border-radius: 1rem 1rem 0 0;
-    }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tile { position: relative; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px;
+          padding: 6px 4px 5px; text-align: center; cursor: pointer; transition: transform .12s;
+          user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  .tile:active { transform: scale(.94); }
+  .ico { display: block; width: 100%; max-width: 60px; aspect-ratio: 1; margin: 0 auto 3px;
+         stroke: #334155; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+  .name { min-height: 2.4em; display: flex; align-items: center; justify-content: center;
+          font-size: 13.5px; font-weight: 800; line-height: 1.15; color: #1e293b; }
+  .face { transition: opacity .15s; }
 
-    /* Interactive Item Card States */
-    .item-card {
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      user-select: none;
-      -webkit-user-select: none;
-      position: relative;
-    }
+  /* Tile states: out = crossed off, yes = confirmed, last = only one left */
+  .out::after, .yes::after { position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; font-size: 3rem; font-weight: 900; pointer-events: none; text-shadow: 0 0 4px #fff; }
+  .out { background: #ffe4e6; border-color: #f43f5e; }
+  .out .face { opacity: .3; filter: grayscale(.8); }
+  .out::after { content: "\2715"; color: #e11d48; }
+  .yes { background: #dcfce7; border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.3); }
+  .yes .face { opacity: .35; }
+  .yes::after { content: "\2713"; color: #15803d; }
+  .last { border-color: #f59e0b; animation: glow 1.3s ease-in-out infinite; }
+  .last::before { content: "\2605"; position: absolute; top: 1px; right: 5px; color: #f59e0b; font-size: 13px; }
+  @keyframes glow { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.6); } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,0); } }
 
-    /* State 1: Red Cross-out (Eliminated) */
-    .state-eliminated {
-      background-color: #ffe4e6 !important;
-      border-color: #f43f5e !important;
-    }
-
-    .state-eliminated::after {
-      content: '✕';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 3.5rem;
-      color: #e11d48;
-      font-weight: 900;
-      line-height: 1;
-      opacity: 0.9;
-      pointer-events: none;
-      text-shadow: 0 0 3px #fff;
-      filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2));
-    }
-
-    .state-eliminated .card-content {
-      opacity: 0.3;
-      filter: grayscale(80%);
-    }
-
-    /* State 2: Green Confirmed Checkmark (Hit/Found) */
-    .state-confirmed {
-      background-color: #dcfce7 !important;
-      border-color: #16a34a !important;
-      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.35);
-    }
-
-    .state-confirmed::after {
-      content: '✓';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 3.8rem;
-      color: #15803d;
-      font-weight: 900;
-      line-height: 1;
-      opacity: 0.95;
-      pointer-events: none;
-      text-shadow: 0 0 4px #fff;
-      filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2));
-    }
-
-    .state-confirmed .card-content {
-      opacity: 0.35;
-    }
-
-    /* Custom Category Header Styling */
-    .header-yellow { background-color: #fef08a; border-color: #eab308; color: #713f12; }
-    .header-blue { background-color: #bae6fd; border-color: #0284c7; color: #0c4a6e; }
-    .header-white { background-color: #f1f5f9; border-color: #64748b; color: #1e293b; }
-    .header-purple { background-color: #f5d0fe; border-color: #c084fc; color: #581c87; }
-  </style>
+  .foot { margin-top: 14px; padding-top: 10px; border-top: 1px solid #e2e8f0; text-align: center;
+          font-size: 11px; color: #94a3b8; font-weight: 600; }
+</style>
 </head>
-<body class="min-h-screen py-4 px-2 sm:px-4 flex flex-col items-center justify-start">
-
-  <div class="max-w-6xl w-full">
-    
-    <!-- Top Action Bar -->
-    <div class="flex justify-between items-center mb-3 px-2">
-      <div class="flex items-center gap-2">
-        <span class="inline-block w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-xs sm:text-sm font-bold tracking-wider uppercase text-slate-300">Digital Detective Pad</span>
-      </div>
-      <button 
-        onclick="confirmReset()" 
-        class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-lg transition-all duration-150 flex items-center gap-2 border border-rose-500">
-        <i class="fa-solid fa-rotate-left"></i> Reset Sheet
-      </button>
-    </div>
-
-    <!-- Paper Game Notepad Container -->
-    <div class="paper-sheet rounded-2xl p-4 sm:p-6 text-slate-800 border-2 border-slate-300">
-      
-      <!-- Title & Header Banner -->
-      <div class="text-center mb-6 pb-4 border-b-2 border-dashed border-slate-300">
-        <div class="flex items-center justify-center gap-3 mb-2 flex-wrap">
-          <div class="bg-amber-500 text-white font-game text-3xl sm:text-5xl px-5 py-1.5 rounded-2xl tracking-wider shadow-md transform -rotate-1 border-2 border-amber-600">
-            CLUE <span class="text-amber-100 text-2xl sm:text-4xl">JUNIOR</span>
-          </div>
-        </div>
-        <h2 class="font-game text-slate-700 text-base sm:text-2xl mt-3 tracking-wide">
-          "Which toy is broken, who broke it, and when?"
-        </h2>
-        <div class="mt-2 inline-flex items-center gap-2 bg-amber-100/80 px-3 py-1 rounded-full border border-amber-300 text-amber-900 text-xs sm:text-sm font-semibold">
-          <i class="fa-solid fa-hand-pointer text-amber-600"></i>
-          <span>Tap 1x: Cross off (X) &nbsp;|&nbsp; Tap 2x: Confirm (✓) &nbsp;|&nbsp; Tap 3x: Clear</span>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <!-- COLUMN 1: TIMES -->
-        <div class="flex flex-col gap-2.5">
-          <div class="col-header header-yellow p-3 rounded-xl border-2 text-center shadow-sm">
-            <h3 class="font-game text-xl leading-tight">TIMES</h3>
-            <span class="text-xs font-bold opacity-80 block">(yellow bases)</span>
-          </div>
-          <div id="times-container" class="flex flex-col gap-2"></div>
-        </div>
-
-        <!-- COLUMN 2: FURNITURE -->
-        <div class="flex flex-col gap-2.5">
-          <div class="col-header header-blue p-3 rounded-xl border-2 text-center shadow-sm">
-            <h3 class="font-game text-xl leading-tight">FURNITURE</h3>
-            <span class="text-xs font-bold opacity-80 block">(locations)</span>
-          </div>
-          <div id="furniture-container" class="flex flex-col gap-2"></div>
-        </div>
-
-        <!-- COLUMN 3: TOYS -->
-        <div class="flex flex-col gap-2.5">
-          <div class="col-header header-white p-3 rounded-xl border-2 text-center shadow-sm">
-            <h3 class="font-game text-xl leading-tight">TOYS</h3>
-            <span class="text-xs font-bold opacity-80 block">(white bases)</span>
-          </div>
-          <div id="toys-container" class="flex flex-col gap-2"></div>
-        </div>
-
-        <!-- COLUMN 4: CHARACTERS -->
-        <div class="flex flex-col gap-2.5">
-          <div class="col-header header-purple p-3 rounded-xl border-2 text-center shadow-sm">
-            <h3 class="font-game text-xl leading-tight">CHARACTERS</h3>
-            <span class="text-xs font-bold opacity-80 block">(suspects)</span>
-          </div>
-          <div id="characters-container" class="flex flex-col gap-2"></div>
-        </div>
-
-      </div>
-
-      <!-- Footer Instructions -->
-      <div class="mt-8 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
-        <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-          <i class="fa-solid fa-magnifying-glass text-amber-600 text-sm"></i>
-          <span><strong>Detective Rule:</strong> Remember to cross out both items as you find clues!</span>
-        </div>
-        <div class="text-slate-400 font-medium">
-          Digital Detective Sheet &bull; Clue Junior Companion
-        </div>
-      </div>
-
-    </div>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <span><span class="dot"></span>Digital Detective Pad</span>
+    <button class="reset" onclick="confirmReset()">&#8634; Reset Sheet</button>
   </div>
 
-  <script>
-    // Inline Custom SVG Artwork Generator for Every Single Game Item
-    const SVG_ASSETS = {
-      // Times Icons
-      "11:00": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/><circle cx="20" cy="20" r="2" fill="#854d0e"/><line x1="20" y1="20" x2="14" y2="10" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="7" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/></svg>`,
-      "12:00": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/><circle cx="20" cy="20" r="2" fill="#854d0e"/><line x1="20" y1="20" x2="20" y2="8" stroke="#854d0e" stroke-width="3.5" stroke-linecap="round"/></svg>`,
-      "1:00": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/><circle cx="20" cy="20" r="2" fill="#854d0e"/><line x1="20" y1="20" x2="26" y2="10" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="7" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/></svg>`,
-      "2:00": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/><circle cx="20" cy="20" r="2" fill="#854d0e"/><line x1="20" y1="20" x2="30" y2="14" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="7" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/></svg>`,
-      "3:00": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/><circle cx="20" cy="20" r="2" fill="#854d0e"/><line x1="20" y1="20" x2="32" y2="20" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="7" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/></svg>`,
-      "4:00": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/><circle cx="20" cy="20" r="2" fill="#854d0e"/><line x1="20" y1="20" x2="30" y2="26" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="7" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/></svg>`,
-      "5:00": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/><circle cx="20" cy="20" r="2" fill="#854d0e"/><line x1="20" y1="20" x2="25" y2="31" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="20" x2="20" y2="7" stroke="#854d0e" stroke-width="3" stroke-linecap="round"/></svg>`,
+  <div class="sheet">
+    <div class="title">
+      <div class="logo">CLUE <small>JUNIOR</small></div><br>
+      <div class="hint">Tap: &#10005; &rarr; &#10003; &rarr; clear &nbsp;|&nbsp; Hold: clear</div>
+    </div>
+    <div class="sections" id="sections"></div>
+    <div class="foot">Digital Detective Sheet &bull; Clue Junior Companion</div>
+  </div>
+</div>
 
-      // Furniture Visuals
-      "Pool Table": `<svg viewBox="0 0 40 40" class="w-full h-full"><rect x="4" y="10" width="32" height="20" rx="3" fill="#15803d" stroke="#166534" stroke-width="2"/><rect x="7" y="13" width="26" height="14" rx="1" fill="#22c55e"/><circle cx="9" cy="15" r="1.5" fill="#000"/><circle cx="31" cy="15" r="1.5" fill="#000"/><circle cx="9" cy="25" r="1.5" fill="#000"/><circle cx="31" cy="25" r="1.5" fill="#000"/><circle cx="18" cy="19" r="1.5" fill="#ef4444"/><circle cx="21" cy="20" r="1.5" fill="#facc15"/><circle cx="23" cy="18" r="1.5" fill="#ffffff"/></svg>`,
-      "Desk": `<svg viewBox="0 0 40 40" class="w-full h-full"><rect x="5" y="12" width="30" height="6" rx="1" fill="#b45309"/><rect x="8" y="18" width="8" height="12" fill="#92400e"/><rect x="24" y="18" width="8" height="12" fill="#92400e"/><line x1="12" y1="21" x2="12" y2="23" stroke="#fef3c7" stroke-width="1.5"/><line x1="28" y1="21" x2="28" y2="23" stroke="#fef3c7" stroke-width="1.5"/><rect x="16" y="8" width="8" height="4" fill="#38bdf8"/></svg>`,
-      "Chair": `<svg viewBox="0 0 40 40" class="w-full h-full"><path d="M14 8h12v12H14z" fill="#9a3412"/><path d="M11 20h18v4H11z" fill="#ea580c"/><line x1="13" y1="24" x2="11" y2="34" stroke="#7c2d12" stroke-width="2.5"/><line x1="27" y1="24" x2="29" y2="34" stroke="#7c2d12" stroke-width="2.5"/></svg>`,
-      "Piano": `<svg viewBox="0 0 40 40" class="w-full h-full"><path d="M6 10h28v10H6z" fill="#1e293b"/><rect x="6" y="20" width="28" height="8" fill="#f8fafc" stroke="#1e293b" stroke-width="1"/><rect x="9" y="20" width="2.5" height="5" fill="#000"/><rect x="13" y="20" width="2.5" height="5" fill="#000"/><rect x="19" y="20" width="2.5" height="5" fill="#000"/><rect x="23" y="20" width="2.5" height="5" fill="#000"/><rect x="27" y="20" width="2.5" height="5" fill="#000"/><line x1="8" y1="28" x2="8" y2="34" stroke="#1e293b" stroke-width="2"/><line x1="32" y1="28" x2="32" y2="34" stroke="#1e293b" stroke-width="2"/></svg>`,
-      "Plant": `<svg viewBox="0 0 40 40" class="w-full h-full"><path d="M14 24l2 11h8l2-11z" fill="#d97706"/><path d="M20 24c-4-6-10-5-12-3 0 0 2 7 12 3z" fill="#22c55e"/><path d="M20 24c4-6 10-5 12-3 0 0-2 7-12 3z" fill="#16a34a"/><path d="M20 24c0-8-3-14-3-14s8 2 3 14z" fill="#15803d"/></svg>`,
-      "Dining Table": `<svg viewBox="0 0 40 40" class="w-full h-full"><ellipse cx="20" cy="18" rx="16" ry="7" fill="#a16207" stroke="#713f12" stroke-width="1.5"/><rect x="18" y="24" width="4" height="10" fill="#713f12"/><ellipse cx="20" cy="34" rx="8" ry="2" fill="#713f12"/></svg>`,
+<script>
+  /* ---------- ICONS (all drawn in code, nothing to download) ---------- */
+  const svg = inner => `<svg class="ico" viewBox="0 0 40 40" aria-hidden="true">${inner}</svg>`;
+  const dot = (x, y, r, fill) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" stroke="none"/>`;
+  // Soft white highlight that makes flat shapes look like glossy toys
+  const hl = (x, y, rx, ry, rot = 0) =>
+    `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#fff" opacity=".45" stroke="none" transform="rotate(${rot} ${x} ${y})"/>`;
 
-      // Toy Artwork
-      "T. rex": `<svg viewBox="0 0 40 40" class="w-full h-full"><path d="M12 28c3 0 6-2 7-5l4 1c2 0 4-2 4-4s-2-3-4-2l-3 1c1-4-1-8-5-10-4-2-8 0-10 3l-1 5c0 4 3 8 8 11z" fill="#16a34a"/><circle cx="10" cy="11" r="1.5" fill="#000"/><path d="M22 20l3 2M15 28l-2 6M20 27l2 7" stroke="#15803d" stroke-width="2" stroke-linecap="round"/></svg>`,
-      "Race Car": `<svg viewBox="0 0 40 40" class="w-full h-full"><path d="M6 22l4-8h20l4 8v5H6z" fill="#dc2626"/><path d="M13 14h14v6H13z" fill="#38bdf8"/><circle cx="11" cy="27" r="4" fill="#1e293b"/><circle cx="11" cy="27" r="2" fill="#94a3b8"/><circle cx="29" cy="27" r="4" fill="#1e293b"/><circle cx="29" cy="27" r="2" fill="#94a3b8"/></svg>`,
-      "Teddy Bear": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="12" cy="10" r="4" fill="#b45309"/><circle cx="28" cy="10" r="4" fill="#b45309"/><circle cx="20" cy="16" r="8" fill="#d97706"/><circle cx="20" cy="27" r="9" fill="#d97706"/><ellipse cx="20" cy="17" rx="3.5" ry="2.5" fill="#fef3c7"/><circle cx="20" cy="16" r="1.5" fill="#78350f"/><circle cx="17" cy="14" r="1" fill="#000"/><circle cx="23" cy="14" r="1" fill="#000"/></svg>`,
-      "Mr. Potato Head": `<svg viewBox="0 0 40 40" class="w-full h-full"><ellipse cx="20" cy="21" rx="10" ry="13" fill="#d97706"/><path d="M12 12c0 0 4-4 8-4s8 4 8 4H12z" fill="#1e293b"/><circle cx="16" cy="18" r="2.5" fill="#fff"/><circle cx="24" cy="18" r="2.5" fill="#fff"/><circle cx="16" cy="18" r="1" fill="#000"/><circle cx="24" cy="18" r="1" fill="#000"/><ellipse cx="20" cy="22" rx="2.5" ry="1.5" fill="#ea580c"/><path d="M15 26q5 4 10 0" stroke="#dc2626" stroke-width="2" fill="none"/></svg>`,
-      "Xylophone": `<svg viewBox="0 0 40 40" class="w-full h-full"><rect x="6" y="8" width="28" height="5" rx="1" fill="#ef4444"/><rect x="8" y="15" width="24" height="5" rx="1" fill="#f97316"/><rect x="10" y="22" width="20" height="5" rx="1" fill="#eab308"/><rect x="12" y="29" width="16" height="5" rx="1" fill="#22c55e"/><line x1="8" y1="6" x2="14" y2="35" stroke="#94a3b8" stroke-width="1.5"/><line x1="32" y1="6" x2="26" y2="35" stroke="#94a3b8" stroke-width="1.5"/></svg>`,
-      "Ball": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="15" fill="#3b82f6" stroke="#1d4ed8" stroke-width="1.5"/><path d="M7 14c8 2 18 2 26 0M7 26c8-2 18-2 26 0" stroke="#ef4444" stroke-width="3" fill="none"/><path d="M14 7c2 8 2 18 0 26M26 7c-2 8-2 18 0 26" stroke="#facc15" stroke-width="3" fill="none"/></svg>`,
+  // Clock: short thick hour hand, long thin minute hand (always at 12)
+  function clock(name) {
+    const a = (parseInt(name) % 12) * Math.PI / 6;
+    const x = (20 + 7 * Math.sin(a)).toFixed(1), y = (20 - 7 * Math.cos(a)).toFixed(1);
+    return svg(`<circle cx="20" cy="20" r="16.5" fill="#fef9c3" stroke="#b45309" stroke-width="2.6"/>
+      <path d="M20 6.5v3M33.5 20h-3M20 33.5v-3M6.5 20h3" stroke-width="1.5"/>
+      <path d="M20 20V9" stroke-width="2.2"/><path d="M20 20L${x} ${y}" stroke-width="4.5"/>
+      ${dot(20, 20, 2.2, "#b45309")}${hl(14, 11, 5, 2, -35)}`);
+  }
 
-      // Character Custom Busts
-      "Col. Mustard": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fef08a" stroke="#eab308" stroke-width="2"/><circle cx="20" cy="15" r="6" fill="#fde047"/><path d="M10 32c0-5.5 4.5-10 10-10s10 4.5 10 10" fill="#ca8a04"/><path d="M15 17c2 2 8 2 10 0" stroke="#854d0e" stroke-width="2" fill="none"/><circle cx="17" cy="13" r="1" fill="#000"/><circle cx="23" cy="13" r="1" fill="#000"/></svg>`,
-      "Miss Scarlett": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#ffe4e6" stroke="#f43f5e" stroke-width="2"/><path d="M12 18c0-6 4-10 8-10s8 4 8 10c0 2-1 6-2 8H14c-1-2-2-6-2-8z" fill="#e11d48"/><circle cx="20" cy="16" r="5.5" fill="#fecdd3"/><path d="M10 32c0-5 4.5-9 10-9s10 4 10 9" fill="#be123c"/></svg>`,
-      "Mr. Green": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/><circle cx="20" cy="15" r="6" fill="#fca5a5"/><path d="M10 32c0-5.5 4.5-10 10-10s10 4.5 10 10" fill="#15803d"/><polygon points="20,22 17,32 23,32" fill="#ffffff"/><polygon points="20,24 18.5,30 21.5,30" fill="#166534"/></svg>`,
-      "Mrs. Peacock": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/><path d="M11 12c3-4 15-4 18 0s1 10 0 12H11c-1-2-3-8 0-12z" fill="#0369a1"/><circle cx="20" cy="16" r="5.5" fill="#fed7aa"/><path d="M10 32c0-5.5 4.5-10 10-10s10 4.5 10 10" fill="#0284c7"/></svg>`,
-      "Dr. Orchid": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/><path d="M13 10c2-3 12-3 14 0 2 3 2 10 0 12H13c-2-2-2-9 0-12z" fill="#831843"/><circle cx="20" cy="16" r="5.5" fill="#fbcfe8"/><path d="M10 32c0-5.5 4.5-10 10-10s10 4.5 10 10" fill="#db2777"/><rect x="14" y="14" width="4" height="3" fill="none" stroke="#831843" stroke-width="1"/><rect x="22" y="14" width="4" height="3" fill="none" stroke="#831843" stroke-width="1"/></svg>`,
-      "Prof. Plum": `<svg viewBox="0 0 40 40" class="w-full h-full"><circle cx="20" cy="20" r="17" fill="#f3e8ff" stroke="#a855f7" stroke-width="2"/><circle cx="20" cy="15" r="6" fill="#fed7aa"/><path d="M14 9c0 0 3-3 6-3s6 3 6 3-1 4-6 4-6-4-6-4z" fill="#581c87"/><path d="M10 32c0-5.5 4.5-10 10-10s10 4.5 10 10" fill="#7e22ce"/><circle cx="16" cy="15" r="2.5" fill="none" stroke="#581c87" stroke-width="1"/><circle cx="24" cy="15" r="2.5" fill="none" stroke="#581c87" stroke-width="1"/><line x1="18.5" y1="15" x2="21.5" y2="15" stroke="#581c87" stroke-width="1"/></svg>`
-    };
+  // Character bust: a shared face plus hair, outfit, and a prop to tell suspects apart
+  function bust(o) {
+    const back = o.style === "long" ? `<path d="M11 19c-1-9 3-14 9-14s10 5 9 14v9h-18z" fill="${o.hair}"/>` : "";
+    const front = o.style === "curly"
+      ? [[13,12],[17,9],[23,9],[27,12],[11,17],[29,17]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" fill="${o.hair}"/>`).join("")
+      : o.style === "none" ? ""
+      : `<path d="M13 16c0-6 3-9 7-9s7 3 7 9c-2-3-5-4-7-4s-5 1-7 4z" fill="${o.hair}"/>`;
+    return svg(`<circle cx="20" cy="20" r="18" fill="${o.bg}"/>${back}
+      <path d="M7 37c0-8 5-12 13-12s13 4 13 12z" fill="${o.shirt}"/>${o.outfit || ""}
+      ${dot(13.2, 18, 1.8, o.skin)}${dot(26.8, 18, 1.8, o.skin)}
+      <circle cx="20" cy="17.5" r="7.2" fill="${o.skin}"/>${front}
+      ${dot(17.3, 17.5, 1.2, "#1e293b")}${dot(22.7, 17.5, 1.2, "#1e293b")}
+      ${dot(15, 20.3, 1.4, "#f87171")}${dot(25, 20.3, 1.4, "#f87171")}
+      <path d="M18 21q2 1.8 4 0" fill="none" stroke-width="1.2"/>${o.extra || ""}${hl(15, 9, 4, 1.4, -20)}`);
+  }
 
-    // Full Game Categories Setup
-    const GAME_CATEGORIES = {
-      times: [
-        { name: "11:00" }, { name: "12:00" }, { name: "1:00" },
-        { name: "2:00" },  { name: "3:00" },  { name: "4:00" }, { name: "5:00" }
-      ],
-      furniture: [
-        { name: "Pool Table" }, { name: "Desk" }, { name: "Chair" },
-        { name: "Piano" },      { name: "Plant" }, { name: "Dining Table" }
-      ],
-      toys: [
-        { name: "T. rex" },        { name: "Race Car" },   { name: "Teddy Bear" },
-        { name: "Mr. Potato Head" }, { name: "Xylophone" }, { name: "Ball" }
-      ],
-      characters: [
-        { name: "Col. Mustard" },  { name: "Miss Scarlett" }, { name: "Mr. Green" },
-        { name: "Mrs. Peacock" },  { name: "Dr. Orchid" },    { name: "Prof. Plum" }
-      ]
-    };
+  const bowtie = c => `<path d="M20 26l-4-2.5v5zM20 26l4-2.5v5z" fill="${c}"/><circle cx="20" cy="26" r="1.3" fill="${c}"/>`;
+  const glasses = `<circle cx="17" cy="17.5" r="3" fill="none" stroke-width="1.2"/><circle cx="23" cy="17.5" r="3" fill="none" stroke-width="1.2"/><path d="M20 17.5h0" stroke-width="1.2"/>`;
 
-    // State Store (0: Normal, 1: Eliminated/Red X, 2: Confirmed/Green Check)
-    let cardStates = {};
+  const ICONS = {
+    // Furniture
+    "Pool Table": svg(`<path d="M8 30v6M32 30v6"/><rect x="3" y="11" width="34" height="19" rx="4" fill="#92400e"/><rect x="6" y="14" width="28" height="13" rx="2" fill="#22c55e"/>${dot(8,15.5,1.8,"#1e293b")}${dot(32,15.5,1.8,"#1e293b")}${dot(8,25.5,1.8,"#1e293b")}${dot(32,25.5,1.8,"#1e293b")}<circle cx="16" cy="21" r="2.2" fill="#ef4444"/><circle cx="21" cy="19" r="2.2" fill="#facc15"/><circle cx="24" cy="22.5" r="2.2" fill="#fff"/>${hl(13,16,6,1.2)}`),
+    "Desk": svg(`<rect x="9" y="3" width="14" height="9" rx="1.5" fill="#38bdf8"/><path d="M16 12v2"/><rect x="27" y="8" width="5" height="6" rx="1" fill="#fff"/><rect x="4" y="14" width="32" height="6" rx="1.5" fill="#d97706"/><rect x="6" y="20" width="10" height="14" fill="#b45309"/><rect x="24" y="20" width="10" height="14" fill="#b45309"/><path d="M10 27h2M28 27h2"/>${hl(12,16,6,1)}`),
+    "Chair": svg(`<rect x="12" y="3" width="16" height="17" rx="3.5" fill="#f97316"/><rect x="9" y="20" width="22" height="6" rx="2.5" fill="#ea580c"/><path d="M12 26l-2 9M28 26l2 9"/>${hl(17,9,2.5,4.5)}`),
+    "Piano": svg(`<rect x="5" y="6" width="30" height="14" rx="2.5" fill="#475569"/><rect x="5" y="20" width="30" height="10" fill="#fff"/><path d="M13 20v10M21 20v10M29 20v10"/><rect x="10" y="20" width="4" height="6" fill="#1e293b"/><rect x="18" y="20" width="4" height="6" fill="#1e293b"/><rect x="26" y="20" width="4" height="6" fill="#1e293b"/><path d="M8 30v6M32 30v6"/>${hl(12,10,6,1.6)}`),
+    "Plant": svg(`<path d="M13 25h14l-2 10H15z" fill="#f97316"/><rect x="12" y="23" width="16" height="4" rx="1.5" fill="#ea580c"/><path d="M20 23C12 23 8 17 9 10c7 0 11 5 11 13z" fill="#22c55e"/><path d="M20 23c8 0 12-6 11-13-7 0-11 5-11 13z" fill="#16a34a"/><path d="M20 23c-3-6-2-12 0-17 2 5 3 11 0 17z" fill="#4ade80"/>${hl(15,29,1.4,3.5)}`),
+    "Dining Table": svg(`<path d="M20 23v11M12 35h16"/><ellipse cx="20" cy="16" rx="16.5" ry="7.5" fill="#d97706"/><ellipse cx="20" cy="16" rx="6.5" ry="2.8" fill="#fff"/><ellipse cx="20" cy="16" rx="3" ry="1.2" fill="#fde68a"/>${hl(10,12,5,1.3,-15)}`),
+    // Toys
+    "T. rex": svg(`<path d="M9 12l-3-4 5 1 1-4 4 3" fill="#16a34a"/><path d="M7 28c0-10 4-18 12-18 5 0 9 2 9 5l5 1v5l-5 1c0 4-1 7-3 9l2 4h-5l-2-4h-6l-2 4H7z" fill="#22c55e"/><path d="M14 32c0-5 2-9 7-9l2 3c0 3-1 5-2 7z" fill="#bbf7d0" stroke="none"/><circle cx="23" cy="14" r="2.4" fill="#fff"/>${dot(23.6,14,1.2,"#1e293b")}<path d="M24 20.5l1.2 2 1.2-2 1.2 2 1.2-2" fill="#fff" stroke-width="1"/><path d="M17 23l3 1" stroke-width="2.2"/>${hl(14,16,3,5,20)}`),
+    "Race Car": svg(`<path d="M3 27v-7l6-2 5-6h12l4 6 7 2v7z" fill="#ef4444"/><path d="M15 13l-3 5h17l-3-5z" fill="#bae6fd"/><circle cx="20" cy="23" r="3.2" fill="#fff"/><path d="M3 24h34" stroke="#fff" stroke-width="1.2"/><circle cx="12" cy="28.5" r="4.6" fill="#1e293b"/><circle cx="29" cy="28.5" r="4.6" fill="#1e293b"/>${dot(12,28.5,1.8,"#cbd5e1")}${dot(29,28.5,1.8,"#cbd5e1")}${hl(10,21,5,1.2,-10)}`),
+    "Teddy Bear": svg(`<circle cx="11" cy="8" r="4.5" fill="#b45309"/><circle cx="29" cy="8" r="4.5" fill="#b45309"/>${dot(11,8,2,"#fbbf24")}${dot(29,8,2,"#fbbf24")}<circle cx="7" cy="26" r="4" fill="#d97706"/><circle cx="33" cy="26" r="4" fill="#d97706"/><ellipse cx="20" cy="30" rx="9.5" ry="8" fill="#d97706"/><ellipse cx="20" cy="31" rx="5.5" ry="5" fill="#fde68a" stroke="none"/><circle cx="20" cy="16" r="9.5" fill="#d97706"/><ellipse cx="20" cy="19.5" rx="4.2" ry="3.2" fill="#fef3c7"/>${dot(20,18.6,1.5,"#78350f")}${dot(16.2,14,1.2,"#1e293b")}${dot(23.8,14,1.2,"#1e293b")}${bowtie("#ef4444").replace('26','25.5')}${hl(14,11,3.5,1.6,-30)}`),
+    "Mr. Potato Head": svg(`<path d="M14 36l-2 2M26 36l2 2"/><ellipse cx="9" cy="23" rx="2.5" ry="4" fill="#d97706"/><ellipse cx="31" cy="23" rx="2.5" ry="4" fill="#d97706"/><ellipse cx="20" cy="22" rx="11" ry="14" fill="#d97706"/>${dot(14,29,1,"#92400e")}${dot(26,14,1,"#92400e")}<path d="M10 12h20l-4-7H14z" fill="#1e293b"/><circle cx="15.5" cy="18" r="3" fill="#fff"/><circle cx="24.5" cy="18" r="3" fill="#fff"/>${dot(15.5,18,1.2,"#1e293b")}${dot(24.5,18,1.2,"#1e293b")}<ellipse cx="20" cy="23" rx="3" ry="2.2" fill="#ea580c"/><path d="M13 26q7-3 14 0" stroke="#1e293b" stroke-width="2.4" fill="none"/><path d="M15 29q5 4 10 0" stroke="#dc2626" fill="none"/>${hl(14,12,3,5,15)}`),
+    "Xylophone": svg(`<path d="M6 8L12 36M34 8L28 36"/><rect x="5" y="7" width="30" height="6" rx="1.5" fill="#ef4444"/><rect x="8" y="15" width="24" height="6" rx="1.5" fill="#f97316"/><rect x="11" y="23" width="18" height="6" rx="1.5" fill="#eab308"/><rect x="14" y="31" width="12" height="5" rx="1.5" fill="#22c55e"/>${hl(12,10,5,1)}${hl(15,18,4,1)}<path d="M30 4l6 6" stroke-width="1.6"/><circle cx="29" cy="3.5" r="2.2" fill="#a855f7"/>`),
+    "Ball": svg(`<circle cx="20" cy="20" r="15.5" fill="#3b82f6"/><path d="M5 15c10 3 20 3 30 0M5 25c10-3 20-3 30 0" stroke="#fbbf24"/><path d="M15 5c3 10 3 20 0 30M25 5c-3 10-3 20 0 30" stroke="#ef4444"/>${hl(13,11,4,2,-40)}`)
+  };
 
-    function generateCard(item, category) {
-      const cardId = `${category}-${item.name.replace(/[^a-zA-Z0-9]/g, '')}`;
-      cardStates[cardId] = 0;
+  const CHARS = {
+    "Col. Mustard":  bust({ skin: "#fde0a8", hair: "#78350f", style: "short", shirt: "#ca8a04", bg: "#fef08a",
+      extra: `<path d="M20 21c-1-1.2-3.5-1.5-5 .3 1.6 1.2 3.6 1 5-.3 1.4 1.3 3.4 1.5 5 .3-1.5-1.8-4-1.5-5-.3z" fill="#78350f"/><path d="M12 11c0-5 3.5-7 8-7s8 2 8 7z" fill="#a16207"/><rect x="11" y="10" width="18" height="3" rx="1.5" fill="#854d0e"/>${dot(20,7,1.2,"#fde047")}` }),
+    "Miss Scarlett": bust({ skin: "#fecdd3", hair: "#e11d48", style: "long", shirt: "#be123c", bg: "#ffe4e6",
+      extra: `<path d="M18.2 21.2q1.8 1.2 3.6 0" stroke="#be123c" stroke-width="1.6" fill="none"/><circle cx="26" cy="10" r="2.4" fill="#fb7185"/>${dot(26,10,0.9,"#fff")}` }),
+    "Mr. Green":     bust({ skin: "#fca5a5", hair: "#44403c", style: "short", shirt: "#15803d", bg: "#dcfce7",
+      outfit: `<path d="M20 25l-3 12h6z" fill="#fff"/>`, extra: bowtie("#064e3b") }),
+    "Mrs. Peacock":  bust({ skin: "#fed7aa", hair: "#0369a1", style: "curly", shirt: "#0284c7", bg: "#e0f2fe",
+      extra: [[14,27],[16.2,28.6],[18.8,29.4],[21.2,29.4],[23.8,28.6],[26,27]].map(([x, y]) => dot(x, y, 1.2, "#fff")).join("") }),
+    "Dr. Orchid":    bust({ skin: "#fbcfe8", hair: "#831843", style: "long", shirt: "#f8fafc", bg: "#fce7f3",
+      outfit: `<path d="M20 25l-4 12M20 25l4 12" fill="none"/><circle cx="26" cy="31" r="2" fill="#ec4899"/>`, extra: glasses }),
+    "Prof. Plum":    bust({ skin: "#fed7aa", hair: "#581c87", style: "short", shirt: "#7e22ce", bg: "#f3e8ff",
+      extra: glasses + bowtie("#facc15") + `<path d="M10 9l10-5 10 5-10 5z" fill="#1e293b"/><path d="M29 9v5" stroke="#facc15"/>${dot(29,15,1.2,"#facc15")}` })
+  };
 
-      const card = document.createElement('div');
-      card.id = cardId;
-      card.className = "item-card bg-white border-2 border-slate-200 rounded-xl p-2.5 h-16 flex items-center justify-between cursor-pointer shadow-sm hover:border-slate-400 active:scale-95";
-      
-      const svgIcon = SVG_ASSETS[item.name] || `<i class="fa-solid fa-question text-slate-400"></i>`;
+  /* ---------- GAME CONTENT (edit names here) ---------- */
+  const SECTIONS = [
+    { id: "time",      title: "TIMES",      color: "yellow", icon: clock,
+      items: ["11:00", "12:00", "1:00", "2:00", "3:00", "4:00", "5:00"] },
+    { id: "furniture", title: "FURNITURE",  color: "blue",   icon: n => ICONS[n],
+      items: ["Pool Table", "Desk", "Chair", "Piano", "Plant", "Dining Table"] },
+    { id: "toy",       title: "TOYS",       color: "grey",   icon: n => ICONS[n],
+      items: ["T. rex", "Race Car", "Teddy Bear", "Mr. Potato Head", "Xylophone", "Ball"] },
+    { id: "character", title: "CHARACTERS", color: "purple", icon: n => CHARS[n],
+      items: ["Col. Mustard", "Miss Scarlett", "Mr. Green", "Mrs. Peacock", "Dr. Orchid", "Prof. Plum"] }
+  ];
 
-      card.innerHTML = `
-        <div class="card-content flex items-center gap-3 w-full">
-          <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-200/60 p-0.5">
-            ${svgIcon}
-          </div>
-          <span class="font-bold text-slate-800 text-sm sm:text-base truncate leading-tight">${item.name}</span>
-        </div>
-      `;
+  /* ---------- STATE: 0 = normal, 1 = crossed off, 2 = confirmed ---------- */
+  const STORAGE_KEY = "clue_junior_card_states";
+  const states = {};
+  const tiles = {};   // card id -> element
 
-      card.addEventListener('click', () => cycleCardState(cardId));
-      return card;
-    }
-
-    function initGameSheet() {
-      const timesContainer = document.getElementById('times-container');
-      const furnitureContainer = document.getElementById('furniture-container');
-      const toysContainer = document.getElementById('toys-container');
-      const charactersContainer = document.getElementById('characters-container');
-
-      GAME_CATEGORIES.times.forEach(item => timesContainer.appendChild(generateCard(item, 'time')));
-      GAME_CATEGORIES.furniture.forEach(item => furnitureContainer.appendChild(generateCard(item, 'furniture')));
-      GAME_CATEGORIES.toys.forEach(item => toysContainer.appendChild(generateCard(item, 'toy')));
-      GAME_CATEGORIES.characters.forEach(item => charactersContainer.appendChild(generateCard(item, 'character')));
-
-      loadStateFromStorage();
-    }
-
-    function cycleCardState(cardId) {
-      const current = cardStates[cardId] || 0;
-      const next = (current + 1) % 3;
-      cardStates[cardId] = next;
-
-      const cardElement = document.getElementById(cardId);
-      if (!cardElement) return;
-
-      cardElement.classList.remove('state-eliminated', 'state-confirmed');
-
-      if (next === 1) {
-        cardElement.classList.add('state-eliminated');
-      } else if (next === 2) {
-        cardElement.classList.add('state-confirmed');
-      }
-
-      saveStateToStorage();
-    }
-
-    function confirmReset() {
-      const hasModifiedItems = Object.values(cardStates).some(state => state !== 0);
-      if (!hasModifiedItems) return;
-
-      if (window.confirm("Start a new game? This will reset all marked items on your sheet.")) {
-        resetSheet();
-      }
-    }
-
-    function resetSheet() {
-      Object.keys(cardStates).forEach(cardId => {
-        cardStates[cardId] = 0;
-        const cardElement = document.getElementById(cardId);
-        if (cardElement) {
-          cardElement.classList.remove('state-eliminated', 'state-confirmed');
-        }
+  function build() {
+    const root = document.getElementById("sections");
+    SECTIONS.forEach(sec => {
+      const box = document.createElement("section");
+      box.innerHTML = `<div class="sec-head ${sec.color}"><h3>${sec.title}</h3><span class="count" id="count-${sec.id}"></span></div><div class="tiles"></div>`;
+      const grid = box.querySelector(".tiles");
+      sec.items.forEach(name => {
+        const id = `${sec.id}-${name.replace(/[^a-zA-Z0-9]/g, "")}`;
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        tile.innerHTML = `<div class="face">${sec.icon(name)}<div class="name">${name}</div></div>`;
+        attachTouch(tile, id);
+        states[id] = 0;
+        tiles[id] = tile;
+        grid.appendChild(tile);
       });
-      localStorage.removeItem('clue_junior_card_states');
-    }
+      root.appendChild(box);
+    });
+    load();
+    refresh();
+  }
 
-    function saveStateToStorage() {
-      localStorage.setItem('clue_junior_card_states', JSON.stringify(cardStates));
-    }
+  // Tap cycles the state; holding for half a second clears it.
+  function attachTouch(tile, id) {
+    let timer = null, held = false;
+    const stop = () => clearTimeout(timer);
+    tile.addEventListener("pointerdown", () => {
+      held = false;
+      timer = setTimeout(() => {
+        held = true;
+        if (states[id] !== 0) { states[id] = 0; buzz(25); save(); refresh(); }
+      }, 500);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(e => tile.addEventListener(e, stop));
+    tile.addEventListener("contextmenu", e => e.preventDefault());
+    tile.addEventListener("click", () => {
+      if (held) { held = false; return; }
+      states[id] = (states[id] + 1) % 3;
+      buzz(10); save(); refresh();
+    });
+  }
 
-    function loadStateFromStorage() {
-      const saved = localStorage.getItem('clue_junior_card_states');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          Object.keys(parsed).forEach(cardId => {
-            const state = parsed[cardId];
-            cardStates[cardId] = state;
-            const cardElement = document.getElementById(cardId);
-            if (cardElement) {
-              if (state === 1) cardElement.classList.add('state-eliminated');
-              if (state === 2) cardElement.classList.add('state-confirmed');
-            }
-          });
-        } catch(e) {
-          console.error("Error restoring saved scorecard state", e);
-        }
-      }
-    }
+  // Update colors, "left" counts, and the glowing last-one-standing tile.
+  function refresh() {
+    SECTIONS.forEach(sec => {
+      const ids = sec.items.map(n => `${sec.id}-${n.replace(/[^a-zA-Z0-9]/g, "")}`);
+      const left = ids.filter(id => states[id] !== 1);
+      const found = ids.some(id => states[id] === 2);
+      ids.forEach(id => {
+        const t = tiles[id];
+        t.classList.toggle("out", states[id] === 1);
+        t.classList.toggle("yes", states[id] === 2);
+        t.classList.toggle("last", left.length === 1 && left[0] === id && states[id] !== 2);
+      });
+      document.getElementById(`count-${sec.id}`).textContent =
+        found ? "Found \u2713" : left.length === 1 ? "Only 1 left!" : `${left.length} left`;
+    });
+  }
 
-    // Launch application on window load
-    window.onload = initGameSheet;
-  </script>
+  function confirmReset() {
+    if (!Object.values(states).some(s => s !== 0)) return;
+    if (window.confirm("Start a new game? This will reset all marked items on your sheet.")) {
+      Object.keys(states).forEach(id => states[id] = 0);
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      refresh();
+    }
+  }
+
+  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(states)); } catch (e) {} }
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      Object.keys(saved).forEach(id => { if (id in states) states[id] = saved[id]; });
+    } catch (e) {}
+  }
+  function buzz(ms) { if (navigator.vibrate) navigator.vibrate(ms); }  // Android only
+
+  // Keep the screen awake while the game is open.
+  let wakeLock = null;
+  async function keepAwake() {
+    try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") keepAwake(); });
+  document.addEventListener("pointerdown", keepAwake, { once: true });
+
+  build();
+  keepAwake();
+</script>
 <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
   }
 </script>
-
 </body>
 </html>
