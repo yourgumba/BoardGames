@@ -2,7 +2,7 @@
 // Games update automatically: users get the new version the next time
 // they open a game after being online (the second open, to be exact).
 
-const CACHE = "boardgames-v7";
+const CACHE = "boardgames-v8";
 
 // 1) Your own files. Add any new game files to this list when you upload them.
 const FILES = [
@@ -32,7 +32,11 @@ const FILES = [
   "./Yahtzee_Scorecard.html",
   "./manifest-yahtzee.json",
   "./icon-yahtzee-192.png",
-  "./icon-yahtzee-512.png"
+  "./icon-yahtzee-512.png",
+  "./Game_Night_Tools.html",
+  "./manifest-tools.json",
+  "./icon-tools-192.png",
+  "./icon-tools-512.png"
 ];
 
 // 2) Outside files your games use (scripts and icons).
