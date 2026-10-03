@@ -1,1 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Clue Junior - Digital Detective Scorecard</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome for fallback UI icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
 
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0f172a;
+      background-image: radial-gradient(#334155 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+      touch-action: manipulation;
+    }
+
+    .font-game {
+      font-family: 'Fredoka One', cursive, sans-serif;
+    }
+
+    /* Paper Pad Visual Aesthetics */
+    .paper-sheet {
+      background: #fdfbf7;
+      box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5), 0 10px 15px -5px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    /* Notepad Top Binding Effect */
+    .paper-sheet::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background: repeating-linear-gradient(
+        90deg,
+        #475569,
+        #475569 18px,
+        #1e293b 18px,
+        #1e293b 36px
+      );
+      border-radius: 1rem 1rem 0 0;
+    }
+
+    /* Interactive Item Card States */
+    .item-card {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      -webkit-user-select: none;
+      position: relative;
+    }
+
+    /* State 1: Red Cross-out (Eliminated) */
+    .state-eliminated {
+      background-color: #ffe4e6 !important;
+      border-color: #f43f5e !important;
+    }
+
+    .state-eliminated::after {
+      content: '✕';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 5rem;
+      color: rgba(225, 29, 72, 0.85);
+      font-weight: 900;
+      line-height: 1;
+      pointer-events: none;
+      text-shadow: 0 0 5px #fff;
+      filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.3));
+    }
+
+    .state-eliminated .card-content {
+      opacity: 0.3;
+      filter: grayscale(80%);
+    }
+
+    /* State 2: Green Confirmed Checkmark (Hit/Found) */
+    .state-confirmed {
+      background-color: #dcfce7 !important;
+      border-color: #16a34a !important;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.35);
+    }
+
+    .state-confirmed::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 5.5rem;
+      color: rgba(21, 128, 61, 0.9);
+      font-weight: 900;
+      line-height: 1;
+      pointer-events: none;
+      text-shadow: 0 0 5px #fff;
+      filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.3));
+    }
+
+    .state-confirmed .card-content {
+      opacity: 0.4;
+    }
+
+    /* Custom Category Header Styling */
+    .header-yellow { background-color: #fef08a; border-color: #eab308; color: #713f12; }
+    .header-blue { background-color: #bae6fd; border-color: #0284c7; color: #0c4a6e; }
+    .header-white { background-color: #f1f5f9; border-color: #64748b; color: #1e293b; }
+    .header-purple { background-color: #f5d0fe; border-color: #c084fc; color: #581c87; }
+  </style>
+</head>
+<body class="min-h-screen py-4 px-2 sm:px-4 flex flex-col items-center justify-start">
+
+  <div class="max-w-6xl w-full">
+    
+    <!-- Top Action Bar -->
+    <div class="flex justify-between items-center mb-3 px-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-xs sm:text-sm font-bold tracking-wider uppercase text-slate-300">Digital Detective Pad</span>
+      </div>
+      <button 
+        onclick="confirmReset()" 
+        class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-lg transition-all duration-150 flex items-center gap-2 border border-rose-500">
+        <i class="fa-solid fa-rotate-left"></i> Reset Sheet
+      </button>
+    </div>
+
+    <!-- Paper Game Notepad Container -->
+    <div class="paper-sheet rounded-2xl p-4 sm:p-6 text-slate-800 border-2 border-slate-300">
+      
+      <!-- Title & Header Banner -->
+      <div class="text-center mb-6 pb-4 border-b-2 border-dashed border-slate-300">
+        <div class="flex items-center justify-center gap-3 mb-2 flex-wrap">
+          <div class="bg-amber-500 text-white font-game text-3xl sm:text-5xl px-5 py-1.5 rounded-2xl tracking-wider shadow-md transform -rotate-1 border-2 border-amber-600">
+            CLUE <span class="text-amber-100 text-2xl sm:text-4xl">JUNIOR</span>
+          </div>
+        </div>
+        <h2 class="font-game text-slate-700 text-base sm:text-2xl mt-3 tracking-wide">
+          "Which toy is broken, who broke it, and when?"
+        </h2>
+        <div class="mt-2 inline-flex items-center gap-2 bg-amber-100/80 px-3 py-1 rounded-full border border-amber-300 text-amber-900 text-xs sm:text-sm font-semibold">
+          <i class="fa-solid fa-hand-pointer text-amber-600"></i>
+          <span>Tap 1x: Cross off (X) &nbsp;|&nbsp; Tap 2x: Confirm (✓) &nbsp;|&nbsp; Tap 3x: Clear</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        
+        <!-- COLUMN 1: TIMES -->
+        <div class="flex flex-col gap-2.5">
+          <div class="col-header header-yellow p-3 rounded-xl border-2 text-center shadow-sm">
+            <h3 class="font-game text-lg sm:text-xl leading-tight">TIMES</h3>
+            <span class="text-[10px] sm:text-xs font-bold opacity-80 block">(yellow bases)</span>
+          </div>
+          <div id="times-container" class="grid grid-cols-1 gap-2"></div>
+        </div>
+
+        <!-- COLUMN 2: FURNITURE -->
+        <div class="flex flex-col gap-2.5">
+          <div class="col-header header-blue p-3 rounded-xl border-2 text-center shadow-sm">
+            <h3 class="font-game text-lg sm:text-xl leading-tight">FURNITURE</h3>
+            <span class="text-[10px] sm:text-xs font-bold opacity-80 block">(locations)</span>
+          </div>
+          <div id="furniture-container" class="grid grid-cols-1 gap-2"></div>
+        </div>
+
+        <!-- COLUMN 3: TOYS -->
+        <div class="flex flex-col gap-2.5">
+          <div class="col-header header-white p-3 rounded-xl border-2 text-center shadow-sm">
+            <h3 class="font-game text-lg sm:text-xl leading-tight">TOYS</h3>
+            <span class="text-[10px] sm:text-xs font-bold opacity-80 block">(white bases)</span>
+          </div>
+          <div id="toys-container" class="grid grid-cols-1 gap-2"></div>
+        </div>
+
+        <!-- COLUMN 4: CHARACTERS -->
+        <div class="flex flex-col gap-2.5">
+          <div class="col-header header-purple p-3 rounded-xl border-2 text-center shadow-sm">
+            <h3 class="font-game text-lg sm:text-xl leading-tight">CHARACTERS</h3>
+            <span class="text-[10px] sm:text-xs font-bold opacity-80 block">(suspects)</span>
+          </div>
+          <div id="characters-container" class="grid grid-cols-1 gap-2"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Detailed, Enlarged SVG Artwork Generator for Every Single Game Item
+    const SVG_ASSETS = {
+      // Times Icons
+      "11:00": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fef08a" stroke="#ca8a04" stroke-width="4"/><circle cx="30" cy="30" r="3" fill="#854d0e"/><line x1="30" y1="30" x2="18" y2="15" stroke="#854d0e" stroke-width="4" stroke-linecap="round"/><line x1="30" y1="30" x2="30" y2="10" stroke="#854d0e" stroke-width="5" stroke-linecap="round"/></svg>`,
+      "12:00": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fef08a" stroke="#ca8a04" stroke-width="4"/><circle cx="30" cy="30" r="3" fill="#854d0e"/><line x1="30" y1="30" x2="30" y2="10" stroke="#854d0e" stroke-width="6" stroke-linecap="round"/></svg>`,
+      "1:00": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fef08a" stroke="#ca8a04" stroke-width="4"/><circle cx="30" cy="30" r="3" fill="#854d0e"/><line x1="30" y1="30" x2="42" y2="15" stroke="#854d0e" stroke-width="4" stroke-linecap="round"/><line x1="30" y1="30" x2="30" y2="10" stroke="#854d0e" stroke-width="5" stroke-linecap="round"/></svg>`,
+      "2:00": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fef08a" stroke="#ca8a04" stroke-width="4"/><circle cx="30" cy="30" r="3" fill="#854d0e"/><line x1="30" y1="30" x2="48" y2="22" stroke="#854d0e" stroke-width="4" stroke-linecap="round"/><line x1="30" y1="30" x2="30" y2="10" stroke="#854d0e" stroke-width="5" stroke-linecap="round"/></svg>`,
+      "3:00": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fef08a" stroke="#ca8a04" stroke-width="4"/><circle cx="30" cy="30" r="3" fill="#854d0e"/><line x1="30" y1="30" x2="50" y2="30" stroke="#854d0e" stroke-width="4" stroke-linecap="round"/><line x1="30" y1="30" x2="30" y2="10" stroke="#854d0e" stroke-width="5" stroke-linecap="round"/></svg>`,
+      "4:00": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fef08a" stroke="#ca8a04" stroke-width="4"/><circle cx="30" cy="30" r="3" fill="#854d0e"/><line x1="30" y1="30" x2="48" y2="42" stroke="#854d0e" stroke-width="4" stroke-linecap="round"/><line x1="30" y1="30" x2="30" y2="10" stroke="#854d0e" stroke-width="5" stroke-linecap="round"/></svg>`,
+      "5:00": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fef08a" stroke="#ca8a04" stroke-width="4"/><circle cx="30" cy="30" r="3" fill="#854d0e"/><line x1="30" y1="30" x2="40" y2="48" stroke="#854d0e" stroke-width="4" stroke-linecap="round"/><line x1="30" y1="30" x2="30" y2="10" stroke="#854d0e" stroke-width="5" stroke-linecap="round"/></svg>`,
+
+      // Furniture Visuals
+      "Pool Table": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><rect x="6" y="15" width="48" height="30" rx="4" fill="#15803d" stroke="#14532d" stroke-width="3"/><rect x="10" y="19" width="40" height="22" rx="2" fill="#22c55e"/><circle cx="13" cy="22" r="2" fill="#000"/><circle cx="47" cy="22" r="2" fill="#000"/><circle cx="13" cy="38" r="2" fill="#000"/><circle cx="47" cy="38" r="2" fill="#000"/><circle cx="28" cy="30" r="2.5" fill="#ef4444"/><circle cx="33" cy="32" r="2.5" fill="#facc15"/><circle cx="36" cy="28" r="2.5" fill="#ffffff"/></svg>`,
+      "Desk": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><rect x="6" y="18" width="48" height="8" rx="2" fill="#b45309" stroke="#78350f" stroke-width="2"/><rect x="10" y="26" width="12" height="20" fill="#92400e" stroke="#78350f" stroke-width="2"/><rect x="38" y="26" width="12" height="20" fill="#92400e" stroke="#78350f" stroke-width="2"/><line x1="16" y1="32" x2="16" y2="35" stroke="#fef3c7" stroke-width="2"/><line x1="44" y1="32" x2="44" y2="35" stroke="#fef3c7" stroke-width="2"/><rect x="24" y="10" width="12" height="8" fill="#38bdf8" stroke="#0284c7" stroke-width="2"/></svg>`,
+      "Chair": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><path d="M20 10h20v20H20z" fill="#9a3412" stroke="#7c2d12" stroke-width="2"/><path d="M15 30h30v6H15z" fill="#ea580c" stroke="#7c2d12" stroke-width="2"/><line x1="18" y1="36" x2="14" y2="52" stroke="#7c2d12" stroke-width="4"/><line x1="42" y1="36" x2="46" y2="52" stroke="#7c2d12" stroke-width="4"/></svg>`,
+      "Piano": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><path d="M8 15h44v15H8z" fill="#1e293b" stroke="#0f172a" stroke-width="2"/><rect x="8" y="30" width="44" height="12" fill="#f8fafc" stroke="#1e293b" stroke-width="2"/><rect x="14" y="30" width="4" height="7" fill="#000"/><rect x="20" y="30" width="4" height="7" fill="#000"/><rect x="30" y="30" width="4" height="7" fill="#000"/><rect x="36" y="30" width="4" height="7" fill="#000"/><rect x="42" y="30" width="4" height="7" fill="#000"/><line x1="12" y1="42" x2="12" y2="52" stroke="#1e293b" stroke-width="4"/><line x1="48" y1="42" x2="48" y2="52" stroke="#1e293b" stroke-width="4"/></svg>`,
+      "Plant": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><path d="M22 36l3 16h10l3-16z" fill="#d97706" stroke="#92400e" stroke-width="2"/><path d="M30 36c-6-10-15-8-18-4 0 0 3 10 18 4z" fill="#22c55e" stroke="#166534" stroke-width="2"/><path d="M30 36c6-10 15-8 18-4 0 0-3 10-18 4z" fill="#16a34a" stroke="#166534" stroke-width="2"/><path d="M30 36c0-12-5-22-5-22s12 3 5 22z" fill="#15803d" stroke="#14532d" stroke-width="2"/></svg>`,
+      "Dining Table": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><ellipse cx="30" cy="26" rx="24" ry="10" fill="#a16207" stroke="#713f12" stroke-width="3"/><rect x="26" y="36" width="8" height="16" fill="#713f12"/><ellipse cx="30" cy="52" rx="12" ry="3" fill="#713f12"/></svg>`,
+
+      // Toy Artwork
+      "T. rex": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><path d="M18 42c4 0 9-3 10-7l6 1.5c3 0 6-3 6-6s-3-4-6-3l-4 1.5c1.5-6-1.5-12-7.5-15-6-3-12 0-15 4.5l-1.5 7.5c0 6 4.5 12 12 16.5z" fill="#16a34a" stroke="#14532d" stroke-width="2"/><circle cx="15" cy="16" r="2.5" fill="#000"/><path d="M33 30l4.5 3M22.5 42l-3 9M30 40.5l3 10.5" stroke="#15803d" stroke-width="3" stroke-linecap="round"/></svg>`,
+      "Race Car": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><path d="M8 34l6-12h32l6 12v8H8z" fill="#dc2626" stroke="#991b1b" stroke-width="2"/><path d="M19 22h22v8H19z" fill="#38bdf8" stroke="#0284c7" stroke-width="2"/><circle cx="16" cy="42" r="6" fill="#1e293b"/><circle cx="16" cy="42" r="2.5" fill="#94a3b8"/><circle cx="44" cy="42" r="6" fill="#1e293b"/><circle cx="44" cy="42" r="2.5" fill="#94a3b8"/></svg>`,
+      "Teddy Bear": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="18" cy="15" r="6" fill="#b45309" stroke="#78350f" stroke-width="2"/><circle cx="42" cy="15" r="6" fill="#b45309" stroke="#78350f" stroke-width="2"/><circle cx="30" cy="24" r="12" fill="#d97706" stroke="#b45309" stroke-width="2"/><circle cx="30" cy="40" r="14" fill="#d97706" stroke="#b45309" stroke-width="2"/><ellipse cx="30" cy="26" rx="5" ry="3.5" fill="#fef3c7"/><circle cx="30" cy="24" r="2" fill="#78350f"/><circle cx="25" cy="21" r="2" fill="#000"/><circle cx="35" cy="21" r="2" fill="#000"/></svg>`,
+      "Mr. Potato Head": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><ellipse cx="30" cy="32" rx="15" ry="20" fill="#d97706" stroke="#92400e" stroke-width="2"/><path d="M18 18c0 0 6-6 12-6s12 6 12 6H18z" fill="#1e293b"/><circle cx="24" cy="27" r="4" fill="#fff"/><circle cx="36" cy="27" r="4" fill="#fff"/><circle cx="24" cy="27" r="1.5" fill="#000"/><circle cx="36" cy="27" r="1.5" fill="#000"/><ellipse cx="30" cy="34" rx="4" ry="2.5" fill="#ea580c"/><path d="M22 40q8 6 16 0" stroke="#dc2626" stroke-width="3" fill="none"/></svg>`,
+      "Xylophone": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><rect x="9" y="12" width="42" height="7" rx="2" fill="#ef4444" stroke="#b91c1c" stroke-width="2"/><rect x="12" y="22" width="36" height="7" rx="2" fill="#f97316" stroke="#c2410c" stroke-width="2"/><rect x="15" y="32" width="30" height="7" rx="2" fill="#eab308" stroke="#a16207" stroke-width="2"/><rect x="18" y="42" width="24" height="7" rx="2" fill="#22c55e" stroke="#15803d" stroke-width="2"/><line x1="12" y1="9" x2="21" y2="52" stroke="#94a3b8" stroke-width="3"/><line x1="48" y1="9" x2="39" y2="52" stroke="#94a3b8" stroke-width="3"/></svg>`,
+      "Ball": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="24" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2"/><path d="M10 21c12 3 28 3 40 0M10 39c12-3 28-3 40 0" stroke="#ef4444" stroke-width="4" fill="none"/><path d="M21 10c3 12 3 28 0 40M39 10c-3 12-3 28 0 40" stroke="#facc15" stroke-width="4" fill="none"/></svg>`,
+
+      // Character Custom Busts
+      "Col. Mustard": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fef08a" stroke="#eab308" stroke-width="3"/><circle cx="30" cy="22" r="9" fill="#fde047" stroke="#ca8a04" stroke-width="2"/><path d="M15 48c0-8 6.5-15 15-15s15 7 15 15" fill="#ca8a04" stroke="#a16207" stroke-width="2"/><path d="M22 25c3 3 12 3 15 0" stroke="#854d0e" stroke-width="3" fill="none"/><circle cx="26" cy="20" r="1.5" fill="#000"/><circle cx="34" cy="20" r="1.5" fill="#000"/></svg>`,
+      "Miss Scarlett": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#ffe4e6" stroke="#f43f5e" stroke-width="3"/><path d="M18 27c0-9 6-15 12-15s12 6 12 15c0 3-1.5 9-3 12H21c-1.5-3-3-9-3-12z" fill="#e11d48" stroke="#be123c" stroke-width="2"/><circle cx="30" cy="24" r="8" fill="#fecdd3" stroke="#fda4af" stroke-width="1"/><path d="M15 48c0-7.5 6.5-13.5 15-13.5s15 6 15 13.5" fill="#be123c" stroke="#9f1239" stroke-width="2"/></svg>`,
+      "Mr. Green": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#dcfce7" stroke="#22c55e" stroke-width="3"/><circle cx="30" cy="22" r="9" fill="#fca5a5" stroke="#f87171" stroke-width="2"/><path d="M15 48c0-8 6.5-15 15-15s15 7 15 15" fill="#15803d" stroke="#166534" stroke-width="2"/><polygon points="30,33 25,48 35,48" fill="#ffffff"/><polygon points="30,36 28,45 32,45" fill="#166534"/></svg>`,
+      "Mrs. Peacock": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#e0f2fe" stroke="#0284c7" stroke-width="3"/><path d="M16 18c4.5-6 22.5-6 27 0s1.5 15 0 18H16c-1.5-3-4.5-12 0-18z" fill="#0369a1" stroke="#075985" stroke-width="2"/><circle cx="30" cy="24" r="8" fill="#fed7aa" stroke="#fdba74" stroke-width="1"/><path d="M15 48c0-8 6.5-15 15-15s15 7 15 15" fill="#0284c7" stroke="#0369a1" stroke-width="2"/></svg>`,
+      "Dr. Orchid": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#fce7f3" stroke="#ec4899" stroke-width="3"/><path d="M19 15c3-4.5 18-4.5 21 0 3 4.5 3 15 0 18H19c-3-3-3-13.5 0-18z" fill="#831843" stroke="#701a36" stroke-width="2"/><circle cx="30" cy="24" r="8" fill="#fbcfe8" stroke="#f9a8d4" stroke-width="1"/><path d="M15 48c0-8 6.5-15 15-15s15 7 15 15" fill="#db2777" stroke="#be185d" stroke-width="2"/><rect x="21" y="21" width="6" height="4.5" fill="none" stroke="#831843" stroke-width="2"/><rect x="33" y="21" width="6" height="4.5" fill="none" stroke="#831843" stroke-width="2"/></svg>`,
+      "Prof. Plum": `<svg viewBox="0 0 60 60" class="w-full h-full drop-shadow-md"><circle cx="30" cy="30" r="26" fill="#f3e8ff" stroke="#a855f7" stroke-width="3"/><circle cx="30" cy="22" r="9" fill="#fed7aa" stroke="#fdba74" stroke-width="1"/><path d="M21 13.5c0 0 4.5-4.5 9-4.5s9 4.5 9 4.5-1.5 6-9 6-9-6-9-6z" fill="#581c87" stroke="#4c1d95" stroke-width="2"/><path d="M15 48c0-8 6.5-15 15-15s15 7 15 15" fill="#7e22ce" stroke="#6b21a8" stroke-width="2"/><circle cx="24" cy="22" r="3.5" fill="none" stroke="#581c87" stroke-width="2"/><circle cx="36" cy="22" r="3.5" fill="none" stroke="#581c87" stroke-width="2"/><line x1="27.5" y1="22" x2="32.5" y2="22" stroke="#581c87" stroke-width="2"/></svg>`
+    };
+
+    const GAME_CATEGORIES = {
+      times: [
+        { name: "11:00" }, { name: "12:00" }, { name: "1:00" },
+        { name: "2:00" },  { name: "3:00" },  { name: "4:00" }, { name: "5:00" }
+      ],
+      furniture: [
+        { name: "Pool Table" }, { name: "Desk" }, { name: "Chair" },
+        { name: "Piano" },      { name: "Plant" }, { name: "Dining Table" }
+      ],
+      toys: [
+        { name: "T. rex" },        { name: "Race Car" },   { name: "Teddy Bear" },
+        { name: "Mr. Potato Head" }, { name: "Xylophone" }, { name: "Ball" }
+      ],
+      characters: [
+        { name: "Col. Mustard" },  { name: "Miss Scarlett" }, { name: "Mr. Green" },
+        { name: "Mrs. Peacock" },  { name: "Dr. Orchid" },    { name: "Prof. Plum" }
+      ]
+    };
+
+    let cardStates = {};
+
+    function generateCard(item, category) {
+      const cardId = `${category}-${item.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+      cardStates[cardId] = 0;
+
+      const card = document.createElement('div');
+      card.id = cardId;
+      card.className = "item-card bg-white border-2 border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer shadow-sm hover:border-slate-400 active:scale-95 transition-transform h-full min-h-[140px] sm:min-h-[160px]";
+      
+      const svgIcon = SVG_ASSETS[item.name] || `<i class="fa-solid fa-question text-slate-400"></i>`;
+
+      card.innerHTML = `
+        <div class="card-content flex flex-col items-center gap-3 w-full h-full">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border-2 border-slate-200 p-1 shadow-inner">
+            ${svgIcon}
+          </div>
+          <span class="font-bold text-slate-800 text-sm sm:text-base text-center leading-tight mt-auto w-full px-1">${item.name}</span>
+        </div>
+      `;
+
+      card.addEventListener('click', () => cycleCardState(cardId));
+      return card;
+    }
+
+    function initGameSheet() {
+      const timesContainer = document.getElementById('times-container');
+      const furnitureContainer = document.getElementById('furniture-container');
+      const toysContainer = document.getElementById('toys-container');
+      const charactersContainer = document.getElementById('characters-container');
+
+      GAME_CATEGORIES.times.forEach(item => timesContainer.appendChild(generateCard(item, 'time')));
+      GAME_CATEGORIES.furniture.forEach(item => furnitureContainer.appendChild(generateCard(item, 'furniture')));
+      GAME_CATEGORIES.toys.forEach(item => toysContainer.appendChild(generateCard(item, 'toy')));
+      GAME_CATEGORIES.characters.forEach(item => charactersContainer.appendChild(generateCard(item, 'character')));
+
+      loadStateFromStorage();
+    }
+
+    function cycleCardState(cardId) {
+      const current = cardStates[cardId] || 0;
+      const next = (current + 1) % 3;
+      cardStates[cardId] = next;
+
+      const cardElement = document.getElementById(cardId);
+      if (!cardElement) return;
+
+      cardElement.classList.remove('state-eliminated', 'state-confirmed');
+
+      if (next === 1) {
+        cardElement.classList.add('state-eliminated');
+      } else if (next === 2) {
+        cardElement.classList.add('state-confirmed');
+      }
+
+      saveStateToStorage();
+    }
+
+    function confirmReset() {
+      const hasModifiedItems = Object.values(cardStates).some(state => state !== 0);
+      if (!hasModifiedItems) return;
+
+      if (window.confirm("Start a new game? This will reset all marked items on your sheet.")) {
+        resetSheet();
+      }
+    }
+
+    function resetSheet() {
+      Object.keys(cardStates).forEach(cardId => {
+        cardStates[cardId] = 0;
+        const cardElement = document.getElementById(cardId);
+        if (cardElement) {
+          cardElement.classList.remove('state-eliminated', 'state-confirmed');
+        }
+      });
+      localStorage.removeItem('clue_junior_card_states');
+    }
+
+    function saveStateToStorage() {
+      localStorage.setItem('clue_junior_card_states', JSON.stringify(cardStates));
+    }
+
+    function loadStateFromStorage() {
+      const saved = localStorage.getItem('clue_junior_card_states');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          Object.keys(parsed).forEach(cardId => {
+            const state = parsed[cardId];
+            cardStates[cardId] = state;
+            const cardElement = document.getElementById(cardId);
+            if (cardElement) {
+              if (state === 1) cardElement.classList.add('state-eliminated');
+              if (state === 2) cardElement.classList.add('state-confirmed');
+            }
+          });
+        } catch(e) {
+          console.error("Error restoring saved scorecard state", e);
+        }
+      }
+    }
+
+    window.onload = initGameSheet;
+  </script>
+
+</body>
+</html>
