@@ -4,52 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Game Night Hub</title>
-  
-  <!-- Tailwind CSS -->
+
+  <!-- Offline app setup (leave these alone) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1f4e5f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Tailwind CSS (styling) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome for UI icons -->
+  <!-- Font Awesome (icons) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
-    
+
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: #0f172a;
       background-image: radial-gradient(#334155 1.5px, transparent 1.5px);
       background-size: 24px 24px;
     }
-    
+
     .game-card {
       transition: all 0.2s ease;
     }
-    
     .game-card:hover {
       transform: translateY(-4px);
     }
-    
     .game-card:active {
       transform: scale(0.98);
+    }
+
+    /* If the last game is alone on its row, stretch it across the full width */
+    @media (min-width: 640px) {
+      .game-grid > a:last-child:nth-child(odd) {
+        grid-column: span 2;
+      }
     }
   </style>
 </head>
 <body class="min-h-screen py-8 px-4 flex flex-col items-center justify-start">
 
   <div class="max-w-3xl w-full">
-    
-    <!-- Header -->
+
+    <!-- Page title -->
     <div class="text-center mb-10">
-      <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-wide uppercase mb-2 shadow-sm drop-shadow-md">
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-wide uppercase mb-2 drop-shadow-md">
         <i class="fa-solid fa-dice text-emerald-400 mr-2"></i> Game Night Hub
       </h1>
       <p class="text-slate-400 text-sm sm:text-base">Tap a game below to launch your digital tools.</p>
     </div>
 
-    <!-- Game Links Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-      
-      <!-- Clue Junior -->
-      <a href="Clue Junior Scorecard - v2.html" class="game-card block bg-amber-500 rounded-2xl p-1 shadow-lg text-decoration-none">
+
+    <!-- =====================================================================
+         HOW TO ADD A GAME
+         1. Copy one whole game block (from "START" to "END") below.
+         2. Paste it right above the line that says "END OF GAMES".
+         3. Change these four things in your copy:
+              - href="..."        the file name of the game (case matters!)
+              - the icon          e.g. fa-magnifying-glass (browse: fontawesome.com/icons)
+              - the game name     the text inside <h2>
+              - the description   the text inside <p>
+         4. Optional: change the colors (see the color list at the bottom).
+
+         HOW TO REMOVE A GAME
+         Delete everything from its "START" line to its "END" line.
+         ===================================================================== -->
+
+    <div class="game-grid grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+
+
+      <!-- ===== START: Clue Junior ===== -->
+      <a href="ClueJuniorScorecard2.html" class="game-card block bg-amber-500 rounded-2xl p-1 shadow-lg">
         <div class="bg-slate-900 h-full rounded-xl p-5 flex items-center gap-4 border-2 border-amber-500/30">
           <div class="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
             <i class="fa-solid fa-magnifying-glass text-2xl text-amber-500"></i>
@@ -60,9 +87,11 @@
           </div>
         </div>
       </a>
+      <!-- ===== END: Clue Junior ===== -->
 
-      <!-- Original Clue -->
-      <a href="Clue-Original.html" class="game-card block bg-rose-600 rounded-2xl p-1 shadow-lg text-decoration-none">
+
+      <!-- ===== START: Clue (Original) ===== -->
+      <a href="Clue-Original.html" class="game-card block bg-rose-600 rounded-2xl p-1 shadow-lg">
         <div class="bg-slate-900 h-full rounded-xl p-5 flex items-center gap-4 border-2 border-rose-600/30">
           <div class="w-14 h-14 rounded-full bg-rose-600/20 flex items-center justify-center shrink-0">
             <i class="fa-solid fa-user-secret text-2xl text-rose-500"></i>
@@ -73,9 +102,11 @@
           </div>
         </div>
       </a>
+      <!-- ===== END: Clue (Original) ===== -->
 
-      <!-- Sorry! Mobile Deck -->
-      <a href="Sorry! Mobile Deck.html" class="game-card block bg-sky-500 rounded-2xl p-1 shadow-lg text-decoration-none sm:col-span-2">
+
+      <!-- ===== START: Sorry! Mobile Deck ===== -->
+      <a href="Sorry_Mobile_Deck.html" class="game-card block bg-sky-500 rounded-2xl p-1 shadow-lg">
         <div class="bg-slate-900 h-full rounded-xl p-5 flex items-center gap-4 border-2 border-sky-500/30">
           <div class="w-14 h-14 rounded-full bg-sky-500/20 flex items-center justify-center shrink-0">
             <i class="fa-solid fa-layer-group text-2xl text-sky-400"></i>
@@ -86,9 +117,48 @@
           </div>
         </div>
       </a>
+      <!-- ===== END: Sorry! Mobile Deck ===== -->
+
+
+      <!-- ===== HIDDEN GAME: Clue Junior (v1) =====
+           This game is turned off. To show it, delete this top line of the
+           block (the one that begins with the comment symbol) and delete the
+           "END HIDDEN" line below that holds the closing symbol.
+
+      <a href="ClueJuniorScorecard.html" class="game-card block bg-emerald-500 rounded-2xl p-1 shadow-lg">
+        <div class="bg-slate-900 h-full rounded-xl p-5 flex items-center gap-4 border-2 border-emerald-500/30">
+          <div class="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-magnifying-glass text-2xl text-emerald-400"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-white mb-1">Clue Junior (v1)</h2>
+            <p class="text-xs text-slate-400 leading-tight">The first version of the Clue Junior scorecard.</p>
+          </div>
+        </div>
+      </a>
+      END HIDDEN ===== -->
+
+
+      <!-- ===== END OF GAMES: paste new game blocks above this line ===== -->
 
     </div>
+
+
+    <!-- =====================================================================
+         COLOR LIST (for the colors in a game block)
+         Each color appears 5 times in a block. Use find-and-replace in your
+         copy, swapping every "amber" for another color name:
+           amber, rose, sky, emerald, violet, orange, teal, pink, indigo
+         ===================================================================== -->
+
   </div>
+
+  <!-- Turns on offline mode (leave this alone) -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
 
 </body>
 </html>
