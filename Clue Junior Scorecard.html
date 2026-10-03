@@ -21,7 +21,10 @@
       background-size: 24px 24px;
       touch-action: manipulation;
     }
-
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f4e5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-192.png">
     .font-game {
       font-family: 'Fredoka One', cursive, sans-serif;
     }
@@ -373,6 +376,10 @@
     // Launch application on window load
     window.onload = initGameSheet;
   </script>
-
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
 </body>
 </html>
