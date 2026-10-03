@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Clue Detective Notepad</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    .state-0 { color: #9CA3AF; } /* Blank/Unchecked */
+    .state-1 { color: #EF4444; text-decoration: line-through; } /* Eliminated (Red X) */
+    .state-2 { color: #10B981; font-weight: bold; border: 2px solid #10B981; border-radius: 8px; } /* Solution (Green) */
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 p-4 font-sans antialiased pb-20">
+
+  <div class="max-w-md mx-auto">
+    <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+      <h1 class="text-2xl font-bold text-white">Detective Notes</h1>
+      <button onclick="clearBoard()" class="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded">Reset</button>
+    </div>
+
+    <!-- Suspects -->
+    <h2 class="text-xl font-semibold mb-3 text-blue-400">Suspects</h2>
+    <div class="grid grid-cols-2 gap-2 mb-6" id="suspects"></div>
+
+    <!-- Weapons -->
+    <h2 class="text-xl font-semibold mb-3 text-red-400">Weapons</h2>
+    <div class="grid grid-cols-2 gap-2 mb-6" id="weapons"></div>
+
+    <!-- Rooms -->
+    <h2 class="text-xl font-semibold mb-3 text-yellow-400">Rooms</h2>
+    <div class="grid grid-cols-2 gap-2 mb-6" id="rooms"></div>
+  </div>
+
+  <script>
+    const data = {
+      suspects: ["Mustard", "Plum", "Green", "Peacock", "Scarlet", "White"],
+      weapons: ["Knife", "Candlestick", "Revolver", "Rope", "Lead Pipe", "Wrench"],
+      rooms: ["Hall", "Lounge", "Dining Room", "Kitchen", "Ballroom", "Conservatory", "Billiard Room", "Library", "Study"]
+    };
+
+    // Load saved state from phone's local storage or create empty state
+    let gameState = JSON.parse(localStorage.getItem('clueState')) || {};
+
+    function saveState() {
+      localStorage.setItem('clueState', JSON.stringify(gameState));
+    }
+
+    function toggleItem(category, item, element) {
+      // States: 0 (Default) -> 1 (Eliminated) -> 2 (Solution) -> 0
+      let currentState = gameState[item] || 0;
+      currentState = (currentState + 1) % 3;
+      gameState[item] = currentState;
+      saveState();
+      updateVisuals(element, currentState);
+    }
+
+    function updateVisuals(element, state) {
+      element.className = `p-3 bg-slate-800 rounded-lg text-center cursor-pointer select-none transition-all duration-200 state-${state}`;
+    }
+
+    function renderBoard() {
+      ['suspects', 'weapons', 'rooms'].forEach(category => {
+        const container = document.getElementById(category);
+        container.innerHTML = '';
+        data[category].forEach(item => {
+          const div = document.createElement('div');
+          div.innerText = item;
+          let state = gameState[item] || 0;
+          updateVisuals(div, state);
+          div.onclick = () => toggleItem(category, item, div);
+          container.appendChild(div);
+        });
+      });
+    }
+
+    function clearBoard() {
+      if(confirm("Clear all your notes and start a new game?")) {
+        gameState = {};
+        saveState();
+        renderBoard();
+      }
+    }
+
+    // Initialize
+    renderBoard();
+  </script>
+</body>
+</html>

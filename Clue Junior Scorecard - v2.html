@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clue Junior Scorecard</title>
+  <style>
+    :root {
+      --bg-color: #f4f1ea;
+      --card-bg: #ffffff;
+      --border-color: #222;
+      --text-color: #111;
+      --header-bg: #e2dfd7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 0 0 5px 0;
+      font-size: 2.5rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #444;
+    }
+
+    .controls {
+      margin-bottom: 25px;
+    }
+
+    button {
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #c9302c;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .col-header {
+      background-color: var(--header-bg);
+      border: 3px solid var(--border-color);
+      padding: 12px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 2px 3px 0px rgba(0,0,0,0.1);
+    }
+
+    .col-header span {
+      font-size: 0.9rem;
+      font-weight: normal;
+      text-transform: none;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    .item-card {
+      background-color: var(--card-bg);
+      border: 3px solid var(--border-color);
+      border-radius: 10px;
+      height: 170px; /* Much larger card for computer screen */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 2px 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.1s ease, background-color 0.15s ease;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 2px 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .item-card:active {
+      transform: scale(0.98);
+    }
+
+    /* Container for the actual pictures */
+    .picture-container {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f9f9f9;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .picture-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Fallback emoji styles if picture is missing */
+    .fallback-icon {
+      font-size: 4rem;
+      line-height: 1;
+    }
+
+    .item-label {
+      font-weight: bold;
+      font-size: 1.15rem;
+      color: #222;
+      text-align: center;
+    }
+
+    /* Marked Off / Crossed State */
+    .item-card.crossed {
+      background-color: #f0f0f0;
+      opacity: 0.7;
+    }
+
+    .item-card.crossed::after {
+      content: "✕";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 8rem;
+      color: rgba(217, 83, 79, 0.85);
+      font-weight: 300;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    /* Confirmed / Green State */
+    .item-card.confirmed {
+      background-color: #d4edda;
+      border-color: #28a745;
+    }
+
+    .item-card.confirmed::after {
+      content: "✓";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 7rem;
+      color: rgba(40, 167, 69, 0.85);
+      font-weight: bold;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h1>Clue Junior</h1>
+  <div class="subtitle">Which toy is broken, who broke it, and when?</div>
+
+  <div class="controls">
+    <button onclick="resetBoard()">Reset Scorecard</button>
+  </div>
+
+  <div class="grid-container">
+
+    <!-- TIMES COLUMN -->
+    <div class="column">
+      <div class="col-header">
+        TIMES
+        <span>(yellow bases)</span>
+      </div>
+      
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/11-00.png" alt="11:00" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🕚</div>
+        </div>
+        <div class="item-label">11:00</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/12-00.png" alt="12:00" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🕛</div>
+        </div>
+        <div class="item-label">12:00</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/1-00.png" alt="1:00" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🕐</div>
+        </div>
+        <div class="item-label">1:00</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/2-00.png" alt="2:00" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🕑</div>
+        </div>
+        <div class="item-label">2:00</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/3-00.png" alt="3:00" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🕒</div>
+        </div>
+        <div class="item-label">3:00</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/4-00.png" alt="4:00" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🕓</div>
+        </div>
+        <div class="item-label">4:00</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/5-00.png" alt="5:00" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🕔</div>
+        </div>
+        <div class="item-label">5:00</div>
+      </div>
+    </div>
+
+    <!-- FURNITURE COLUMN -->
+    <div class="column">
+      <div class="col-header">FURNITURE</div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/pool-table.png" alt="Pool Table" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🎱</div>
+        </div>
+        <div class="item-label">Pool Table</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/desk.png" alt="Desk" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🗄️</div>
+        </div>
+        <div class="item-label">Desk</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/chair.png" alt="Chair" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🪑</div>
+        </div>
+        <div class="item-label">Chair</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/piano.png" alt="Piano" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🎹</div>
+        </div>
+        <div class="item-label">Piano</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/plant.png" alt="Plant" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🪴</div>
+        </div>
+        <div class="item-label">Plant</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/dining-table.png" alt="Dining Table" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🍽️</div>
+        </div>
+        <div class="item-label">Dining Table</div>
+      </div>
+    </div>
+
+    <!-- TOYS COLUMN -->
+    <div class="column">
+      <div class="col-header">
+        TOYS
+        <span>(white bases)</span>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/t-rex.png" alt="T. rex" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🦖</div>
+        </div>
+        <div class="item-label">T. rex</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/race-car.png" alt="Race Car" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🏎️</div>
+        </div>
+        <div class="item-label">Race Car</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/teddy-bear.png" alt="Teddy Bear" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🧸</div>
+        </div>
+        <div class="item-label">Teddy Bear</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/potato-head.png" alt="Mr. Potato Head" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🥔</div>
+        </div>
+        <div class="item-label">Mr. Potato Head®</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/xylophone.png" alt="Xylophone" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🎼</div>
+        </div>
+        <div class="item-label">Xylophone</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container">
+          <img src="images/ball.png" alt="Ball" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">⚽</div>
+        </div>
+        <div class="item-label">Ball</div>
+      </div>
+    </div>
+
+    <!-- CHARACTERS COLUMN -->
+    <div class="column">
+      <div class="col-header">CHARACTERS</div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container" style="border-color: #fdd835; background-color: #fffde7;">
+          <img src="images/mustard.png" alt="Col. Mustard" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🟨</div>
+        </div>
+        <div class="item-label">Col. Mustard</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container" style="border-color: #e53935; background-color: #ffebee;">
+          <img src="images/scarlett.png" alt="Miss Scarlett" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🟥</div>
+        </div>
+        <div class="item-label">Miss Scarlett</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container" style="border-color: #43a047; background-color: #e8f5e9;">
+          <img src="images/green.png" alt="Mr. Green" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🟩</div>
+        </div>
+        <div class="item-label">Mr. Green</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container" style="border-color: #03a9f4; background-color: #e1f5fe;">
+          <img src="images/peacock.png" alt="Mrs. Peacock" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🟦</div>
+        </div>
+        <div class="item-label">Mrs. Peacock</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container" style="border-color: #ba68c8; background-color: #f3e5f5;">
+          <img src="images/orchid.png" alt="Dr. Orchid" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🟪</div>
+        </div>
+        <div class="item-label">Dr. Orchid</div>
+      </div>
+
+      <div class="item-card" onclick="toggleState(this)">
+        <div class="picture-container" style="border-color: #7e57c2; background-color: #ede7f6;">
+          <img src="images/plum.png" alt="Prof. Plum" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div class="fallback-icon" style="display:none;">🟪</div>
+        </div>
+        <div class="item-label">Prof. Plum</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function toggleState(element) {
+      // Rotate between: Blank -> Crossed Out (X) -> Confirmed (Checkmark)
+      if (!element.classList.contains('crossed') && !element.classList.contains('confirmed')) {
+        element.classList.add('crossed');
+      } else if (element.classList.contains('crossed')) {
+        element.classList.remove('crossed');
+        element.classList.add('confirmed');
+      } else {
+        element.classList.remove('confirmed');
+      }
+    }
+
+    function resetBoard() {
+      if (confirm("Reset the whole card for a new game?")) {
+        const cards = document.querySelectorAll('.item-card');
+        cards.forEach(card => {
+          card.classList.remove('crossed', 'confirmed');
+        });
+      }
+    }
+  </script>
+
+</body>
+</html>
