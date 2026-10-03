@@ -23,23 +23,20 @@
   header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   h1 { margin: 0; font-size: 24px; letter-spacing: .06em; text-transform: uppercase; }
   .small { background: #1e293b; border: 1px solid #475569; border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 700; text-decoration: none; color: #fff; }
+  .hrow { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px; }
+  .hrow h2 { margin: 0 0 8px; }
+  .hrow .clear { margin-bottom: 6px; font-size: 12px; padding: 4px 10px; }
   h2 { margin: 16px 0 8px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #a5b4fc; }
 
-  /* Dice shapes (used in the picker and in results) */
-  .die { position: relative; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #0f172a; border: 0; }
-  .d4   { background: #f87171; clip-path: polygon(50% 4%, 97% 94%, 3% 94%); padding-top: 22%; }
-  .d6   { background: #fb923c; border-radius: 18%; }
-  .d8   { background: #facc15; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
-  .d10  { background: #4ade80; clip-path: polygon(50% 0, 97% 38%, 50% 100%, 3% 38%); }
-  .d12  { background: #38bdf8; clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%); }
-  .d20  { background: #a78bfa; clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); }
-  .d100 { background: #f472b6; border-radius: 50%; }
+  /* Dice (drawn as SVG by dieSVG() in the script below) */
+  .die { display: block; padding: 0; background: none; border: 0; }
+  .die svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
 
   /* Picker */
   .picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .cell { background: rgba(15,23,42,.7); border: 1px solid #334155; border-radius: 14px; padding: 8px 4px; text-align: center; }
   .cell.on { border-color: #fbbf24; }
-  .pick { width: 52px; height: 52px; font-size: 15px; margin: 0 auto 6px; }
+  .pick { width: 56px; height: 56px; margin: 0 auto 6px; }
   .pick:active { transform: scale(.9); }
   .ctl { display: flex; align-items: center; justify-content: center; gap: 4px; }
   .ctl button, .mod button { width: 30px; height: 30px; border-radius: 50%; border: 0; background: #334155; font-size: 18px; font-weight: 900; line-height: 1; }
@@ -58,7 +55,7 @@
 
   /* Results */
   #results { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; min-height: 20px; }
-  #results .die { width: 62px; height: 62px; font-size: 22px; }
+  #results .die { width: 70px; height: 70px; }
   #results .die.rolling { animation: shake .15s linear infinite; }
   #results .die.crit { box-shadow: none; filter: drop-shadow(0 0 8px #fde047) drop-shadow(0 0 3px #fff); }
   #results .die.fail { filter: drop-shadow(0 0 8px #ef4444); opacity: .85; }
@@ -73,6 +70,9 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <radialGradient id="gloss" cx="32%" cy="22%" r="80%"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+</defs></svg>
 <div class="wrap">
   <header>
     <h1>&#127922; Dice Roller</h1>
@@ -100,7 +100,7 @@
   <div id="note"></div>
   <div id="break"></div>
 
-  <h2>Recent rolls</h2>
+  <div class="hrow"><h2>Recent rolls</h2><button class="clear" onclick="clearHistory()">Clear history</button></div>
   <ul id="hist"></ul>
 </div>
 
@@ -132,11 +132,54 @@
     return a[0] % n + 1;
   }
 
+  /* ---------- DICE DRAWING (all code, no image files) ---------- */
+  const COLORS = { 4: "#f87171", 6: "#fb923c", 8: "#facc15", 10: "#4ade80", 12: "#38bdf8", 20: "#a78bfa", 100: "#f472b6" };
+  // outline = the die's silhouette; facets = [points, shade strength, 1 = lighter / 0 = darker]; at = where the number goes
+  const SHAPES = {
+    4:  { outline: "50,5 96,90 4,90", at: [50, 66],
+          facets: [["50,5 4,90 50,68", .25, 1], ["50,5 96,90 50,68", .18, 0], ["4,90 96,90 50,68", .06, 0]] },
+    8:  { outline: "50,4 96,50 50,96 4,50", at: [50, 48],
+          facets: [["50,4 96,50 4,50", .25, 1], ["4,50 50,96 50,50", .06, 0], ["96,50 50,96 50,50", .2, 0]] },
+    10: { outline: "50,4 94,38 50,96 6,38", at: [50, 52],
+          facets: [["50,4 6,38 50,54", .25, 1], ["50,4 94,38 50,54", .06, 1], ["6,38 50,96 50,54", .08, 0], ["94,38 50,96 50,54", .2, 0]] },
+    12: { outline: "50,4 96,38 78,92 22,92 4,38", at: [50, 52],
+          facets: [["50,28 73,45 64,72 36,72 27,45", .24, 1], ["50,4 50,28 27,45 4,38", .12, 1], ["50,4 96,38 73,45 50,28", .06, 1],
+                   ["96,38 78,92 64,72 73,45", .14, 0], ["78,92 22,92 36,72 64,72", .22, 0], ["22,92 4,38 27,45 36,72", .06, 0]] },
+    20: { outline: "50,4 92,27 92,73 50,96 8,73 8,27", at: [50, 53],
+          facets: [["50,26 78,70 22,70", .25, 1], ["50,4 50,26 8,27", .1, 1], ["50,4 50,26 92,27", .05, 1], ["50,26 8,27 22,70", .08, 1],
+                   ["50,26 92,27 78,70", .12, 0], ["22,70 8,27 8,73", .04, 0], ["78,70 92,27 92,73", .2, 0],
+                   ["22,70 8,73 50,96", .12, 0], ["78,70 92,73 50,96", .26, 0], ["22,70 78,70 50,96", .18, 0]] }
+  };
+  const PIPS = { tl: [30, 30], tr: [70, 30], ml: [30, 50], mr: [70, 50], c: [50, 50], bl: [30, 70], br: [70, 70] };
+  const PIP_LAYOUT = { 1: ["c"], 2: ["tl", "br"], 3: ["tl", "c", "br"], 4: ["tl", "tr", "bl", "br"], 5: ["tl", "tr", "c", "bl", "br"], 6: ["tl", "tr", "ml", "mr", "bl", "br"] };
+
+  // Draws one die. With a value it shows that number (pips on a d6); without one it shows the label (d20, etc.)
+  function dieSVG(n, v) {
+    const c = COLORS[n], edge = `stroke="#0f172a" stroke-width="2.5" stroke-linejoin="round"`;
+    const hasVal = v !== undefined, label = hasVal ? v : "d" + n;
+    const size = !hasVal ? 22 : String(v).length > 2 ? 24 : 30;
+    const text = (x, y) => `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-weight="900" fill="#0f172a" stroke="rgba(255,255,255,.55)" stroke-width="3" paint-order="stroke" font-family="inherit">${label}</text>`;
+    let body;
+    if (n === 6) {
+      body = `<rect x="6" y="6" width="88" height="88" rx="16" fill="${c}" ${edge}/><rect x="13" y="13" width="74" height="74" rx="11" fill="rgba(255,255,255,.15)"/>`
+        + (hasVal ? PIP_LAYOUT[v].map(k => `<circle cx="${PIPS[k][0]}" cy="${PIPS[k][1]}" r="8" fill="#0f172a"/>`).join("") : text(50, 50))
+        + `<rect x="6" y="6" width="88" height="88" rx="16" fill="url(#gloss)"/>`;
+    } else if (n === 100) {
+      body = `<circle cx="50" cy="50" r="45" fill="${c}" ${edge}/><circle cx="50" cy="50" r="36" fill="none" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>${text(50, 50)}<circle cx="50" cy="50" r="45" fill="url(#gloss)"/>`;
+    } else {
+      const sh = SHAPES[n];
+      body = `<polygon points="${sh.outline}" fill="${c}" ${edge}/>`
+        + sh.facets.map(([pts, o, light]) => `<polygon points="${pts}" fill="${light ? "#fff" : "#000"}" fill-opacity="${o}" stroke="rgba(0,0,0,.35)" stroke-width="1.4" stroke-linejoin="round"/>`).join("")
+        + text(sh.at[0], sh.at[1]) + `<polygon points="${sh.outline}" fill="url(#gloss)"/>`;
+    }
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">${body}</svg>`;
+  }
+
   /* ---------- PICKER ---------- */
   function buildPicker() {
     $("picker").innerHTML = DICE.map(n => `
       <div class="cell" id="cell${n}">
-        <button class="die d${n} pick" onclick="add(${n}, 1)">d${n}</button>
+        <button class="die pick" onclick="add(${n}, 1)">${dieSVG(n)}</button>
         <div class="ctl"><button onclick="add(${n}, -1)">&minus;</button><span id="n${n}">0</span><button onclick="add(${n}, 1)">+</button></div>
       </div>`).join("");
   }
@@ -166,7 +209,7 @@
     $("results").innerHTML = "";
     groups.forEach(g => g.vals.forEach(v => {
       const d = document.createElement("div");
-      d.className = `die d${g.n} rolling`; d.textContent = rnd(g.n);
+      d.className = "die rolling"; d.innerHTML = dieSVG(g.n, rnd(g.n));
       $("results").appendChild(d); el.push({ d, g, v });
     }));
     $("total").textContent = ""; $("note").textContent = ""; $("note").className = ""; $("break").textContent = "";
@@ -174,14 +217,14 @@
 
     let ticks = 0;
     const timer = setInterval(() => {
-      el.forEach(x => x.d.textContent = rnd(x.g.n));
+      el.forEach(x => x.d.innerHTML = dieSVG(x.g.n, rnd(x.g.n)));
       if (++ticks >= 10) { clearInterval(timer); finish(groups, el); }
     }, 70);
   }
 
   function finish(groups, el) {
     el.forEach(x => {
-      x.d.textContent = x.v; x.d.classList.remove("rolling");
+      x.d.innerHTML = dieSVG(x.g.n, x.v); x.d.classList.remove("rolling");
       if (x.g.n === 20 && x.v === 20) x.d.classList.add("crit");
       if (x.g.n === 20 && x.v === 1) x.d.classList.add("fail");
     });
@@ -199,6 +242,8 @@
     history.unshift({ pool: poolText(), total }); history = history.slice(0, 6);
     renderHistory(); save(); rolling = false;
   }
+
+  function clearHistory() { history = []; renderHistory(); save(); }
 
   function renderHistory() {
     $("hist").innerHTML = history.map(h => `<li><span>${h.pool}</span><b>${h.total}</b></li>`).join("") || "<li>Nothing yet</li>";
