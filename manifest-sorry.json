@@ -1,0 +1,26 @@
+{
+  "id": "/BoardGames/sorry",
+  "name": "Sorry! Mobile Deck",
+  "short_name": "Sorry! Deck",
+  "description": "Digital Sorry! draw deck",
+  "start_url": "./Sorry_Mobile_Deck.html",
+  "scope": "./Sorry_Mobile_Deck.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0369a1",
+  "theme_color": "#0369a1",
+  "icons": [
+    {
+      "src": "icon-sorry-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-sorry-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+PER-GAME SETUP
+==============
+In each game's HTML file, find the <head> section. If you pasted the earlier
+snippet, REPLACE the four lines (manifest, theme-color, apple-mobile-web-app-capable,
+apple-touch-icon) with the matching block below. Keep the <script> near </body>
+that starts with 'if ("serviceWorker" in navigator)'. It stays the same.
+
+--- ClueJuniorScorecard2.html ---
+<link rel="manifest" href="manifest-clue-junior.json">
+<meta name="theme-color" content="#b45309">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-clue-junior-192.png">
+
+--- Clue-Original.html ---
+<link rel="manifest" href="manifest-clue-original.json">
+<meta name="theme-color" content="#be123c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-clue-original-192.png">
+
+--- Sorry_Mobile_Deck.html ---
+<link rel="manifest" href="manifest-sorry.json">
+<meta name="theme-color" content="#0369a1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-sorry-192.png">

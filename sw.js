@@ -2,7 +2,7 @@
 // Games update automatically: users get the new version the next time
 // they open a game after being online (the second open, to be exact).
 
-const CACHE = "boardgames-v3";
+const CACHE = "boardgames-v4";
 
 // 1) Your own files. Add any new game files to this list when you upload them.
 const FILES = [
@@ -14,7 +14,16 @@ const FILES = [
   "./Sorry_Mobile_Deck.html",
   "./manifest.json",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./manifest-clue-junior.json",
+  "./icon-clue-junior-192.png",
+  "./icon-clue-junior-512.png",
+  "./manifest-clue-original.json",
+  "./icon-clue-original-192.png",
+  "./icon-clue-original-512.png",
+  "./manifest-sorry.json",
+  "./icon-sorry-192.png",
+  "./icon-sorry-512.png"
 ];
 
 // 2) Outside files your games use (scripts and icons).

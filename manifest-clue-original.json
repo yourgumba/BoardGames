@@ -1,0 +1,26 @@
+{
+  "id": "/BoardGames/clue-original",
+  "name": "Clue Original",
+  "short_name": "Clue",
+  "description": "Digital Clue detective notes",
+  "start_url": "./Clue-Original.html",
+  "scope": "./Clue-Original.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#be123c",
+  "theme_color": "#be123c",
+  "icons": [
+    {
+      "src": "icon-clue-original-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-clue-original-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
