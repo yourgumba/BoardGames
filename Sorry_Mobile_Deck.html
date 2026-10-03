@@ -5,376 +5,267 @@
 <meta name="theme-color" content="#0369a1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="icon-sorry-192.png">
-  
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Sorry! Mobile Deck</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sorry! Mobile Deck</title>
+<style>
+  /* Self-contained: no Tailwind, no web fonts, no outside files. */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex; flex-direction: column; height: 100dvh; overflow: hidden; color: #fff;
+    font-family: ui-rounded, "Inter", "Segoe UI", system-ui, sans-serif; touch-action: manipulation;
+    background: radial-gradient(circle at top, #1e3a8a 0%, #020617 100%);
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+             max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  }
+  button { font: inherit; cursor: pointer; color: inherit; }
 
-    body {
-      background-color: #0f172a;
-      background-image: radial-gradient(circle at top, #1e3a8a 0%, #020617 100%);
-      font-family: 'Inter', sans-serif;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      overscroll-behavior-y: none;
-    }
+  /* Header */
+  header { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 440px; margin: 0 auto; }
+  h1 { margin: 0; font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: .08em; }
+  h1 span { color: #f43f5e; } h1 small { font-size: 13px; font-style: normal; color: #94a3b8; letter-spacing: .1em; }
+  #countBtn { background: #0f172a; border: 1px solid #475569; border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; }
+  #count { font-size: 24px; color: #fbbf24; margin-left: 4px; }
 
-    .perspective { perspective: 1200px; }
-    .transform-style-3d { transform-style: preserve-3d; }
-    .backface-hidden {
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-    
-    .rotate-y-180 { transform: rotateY(180deg); }
-    
-    .card-transition {
-      transition: transform 0.5s cubic-bezier(0.2, 0.85, 0.4, 1.2);
-    }
+  /* Tally panel and recent strip */
+  #tally { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; width: 100%; max-width: 440px; margin: 8px auto 0;
+           background: rgba(15,23,42,.85); border: 1px solid #475569; border-radius: 14px; padding: 8px; }
+  #tally[hidden] { display: none; }
+  .chip { background: #1e293b; border-radius: 10px; padding: 4px 10px; font-size: 13px; font-weight: 800; }
+  .chip b { color: #fbbf24; margin-left: 4px; } .chip.zero { opacity: .35; }
+  #recent { display: flex; gap: 6px; align-items: center; justify-content: center; width: 100%; max-width: 440px;
+            margin: 8px auto 0; min-height: 28px; font-size: 12px; color: #94a3b8; font-weight: 700; }
+  .rc { min-width: 30px; text-align: center; background: #e2e8f0; color: #0f172a; border-radius: 8px; padding: 3px 7px; font-weight: 900; font-size: 13px; opacity: .6; }
+  .rc:first-of-type { opacity: 1; outline: 2px solid #fbbf24; }
 
-    /* Typography: Dynamic font sizes that stretch to fill the screen */
-    .massive-number {
-      font-size: clamp(4.5rem, 14vh, 9rem);
-      line-height: 0.85;
-      letter-spacing: -0.05em;
-      color: #000000; /* Pure Black */
-      text-transform: uppercase;
-      text-shadow: 0px 1px 1px rgba(255,255,255,0.5); /* Slight highlight for classic print look */
-    }
-    
-    /* Slightly smaller size for the word "SORRY!" so it fits horizontally */
-    .sorry-title {
-      font-size: clamp(2.8rem, 9vh, 6rem);
-      line-height: 0.9;
-      letter-spacing: -0.02em;
-      font-style: italic;
-      color: #000000;
-      text-shadow: 0px 1px 1px rgba(255,255,255,0.5);
-    }
+  /* Card */
+  .scene { flex: 1; min-height: 0; width: 100%; max-width: 440px; margin: 8px auto; perspective: 1200px; }
+  .card { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; border-radius: 24px; cursor: pointer;
+          transition: transform .5s cubic-bezier(.2, .85, .4, 1.2); box-shadow: 0 15px 35px -5px rgba(0,0,0,.8); }
+  .card.flip { transform: rotateY(180deg); }
+  .card.noanim { transition: none; }
+  .face { position: absolute; inset: 0; border-radius: 24px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 
-    .massive-rule {
-      font-size: clamp(1.25rem, 4vh, 2.8rem);
-      line-height: 1.15;
-      letter-spacing: -0.01em;
-      color: #000000; /* Pure Black */
-    }
+  /* Original card back */
+  .back { border: 10px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+          background: repeating-linear-gradient(45deg, #0f766e 0 16px, #115e59 16px 32px); }
+  .back svg { width: 46%; max-width: 160px; filter: drop-shadow(2px 3px 3px rgba(0,0,0,.5)); }
+  .back p { margin: 0; font-weight: 900; letter-spacing: .25em; font-size: 14px; color: #ccfbf1; text-shadow: 1px 1px 2px rgba(0,0,0,.6); }
 
-    /* Long rules scale down slightly to avoid cutting off */
-    .massive-rule.long-text {
-      font-size: clamp(1.1rem, 3.2vh, 2.2rem);
-    }
+  /* Card front: top half is flipped so the player across the table can read it */
+  .front { transform: rotateY(180deg); background: #fdfbf7; border: 10px solid #fff; display: flex; flex-direction: column; padding: 8px 10px; }
+  .front::after { content: ""; position: absolute; inset: 3px; border: 2px solid #1e293b; border-radius: 14px; opacity: .7; pointer-events: none; }
+  .half { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4px; }
+  .half.top { transform: rotate(180deg); }
+  .num { color: #000; font-weight: 900; font-size: clamp(4rem, 14vh, 8.5rem); line-height: .9; letter-spacing: -.05em; text-shadow: 0 1px 1px rgba(255,255,255,.5); }
+  .num.sorry { font-size: clamp(2.6rem, 9vh, 5.5rem); font-style: italic; letter-spacing: -.02em; }
+  .rule { color: #000; font-weight: 800; font-size: clamp(1.15rem, 3.8vh, 2.4rem); line-height: 1.15; margin-top: 6px; }
+  .rule.long { font-size: clamp(1rem, 3vh, 2rem); }
+  .mid { position: relative; height: 0; border-top: 2px dashed #cbd5e1; margin: 2px 0; }
+  #again { display: none; position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%); z-index: 3; white-space: nowrap;
+           background: #f43f5e; color: #fff; font-weight: 900; font-size: 15px; letter-spacing: .08em; padding: 6px 16px; border-radius: 999px;
+           border: 2px solid #fff; animation: pulse 1s ease-in-out infinite; }
+  #again.show { display: block; }
+  @keyframes pulse { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.12); } }
 
-    /* Flash animation when card draws */
-    @keyframes cardFlash {
-      0% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
-      50% { box-shadow: 0 0 40px rgba(255, 255, 255, 1); }
-      100% { box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.8); }
-    }
-    
-    .card-shadow {
-      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.8), 0 10px 15px -5px rgba(0, 0, 0, 0.6);
-    }
+  /* Controls */
+  .controls { width: 100%; max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+  .draw { background: #fbbf24; color: #000; border: 0; border-bottom: 6px solid #d97706; border-radius: 18px; padding: 16px;
+          font-weight: 900; font-size: 24px; letter-spacing: .1em; text-transform: uppercase; }
+  .draw.again { background: #fb7185; border-bottom-color: #be123c; }
+  .draw:active { transform: scale(.97); }
+  .row { display: flex; gap: 8px; }
+  .row button { flex: 1; background: #1e293b; border: 0; border-bottom: 4px solid #020617; border-radius: 14px; padding: 12px 6px;
+                font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; }
+  .row button:active { transform: scale(.96); }
 
-    /* Custom Toast Message Animation */
-    @keyframes slideDown {
-      0% { transform: translate(-50%, -150%); opacity: 0; }
-      10% { transform: translate(-50%, 0); opacity: 1; }
-      90% { transform: translate(-50%, 0); opacity: 1; }
-      100% { transform: translate(-50%, -150%); opacity: 0; }
-    }
-    .toast-animate {
-      animation: slideDown 3s forwards cubic-bezier(0.2, 0.85, 0.4, 1.2);
-    }
-  </style>
+  #toast { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 50%; transform: translate(-50%, -200%); opacity: 0; z-index: 9;
+           background: #fbbf24; color: #000; font-weight: 800; padding: 10px 22px; border-radius: 999px; border: 2px solid #d97706; }
+  #toast.show { animation: slide 3s forwards; }
+  @keyframes slide { 0% { transform: translate(-50%,-200%); opacity: 0; } 10%,90% { transform: translate(-50%,0); opacity: 1; } 100% { transform: translate(-50%,-200%); opacity: 0; } }
+</style>
 </head>
+<body>
+<div id="toast">Deck is empty! Reshuffling...</div>
 
-<body class="h-screen w-screen overflow-hidden flex flex-col items-center justify-between p-2 sm:p-4 text-white">
+<header>
+  <h1>SORRY<span>!</span> <small>DECK</small></h1>
+  <button id="countBtn" onclick="toggleTally()" title="Tap to see what's left">Cards:<span id="count">45</span></button>
+</header>
+<div id="tally" hidden></div>
+<div id="recent"></div>
 
-  <!-- Toast Notification (Replaces native alert) -->
-  <div id="toast-message" class="fixed top-4 left-1/2 transform -translate-x-1/2 -translate-y-[150%] opacity-0 bg-amber-400 text-black font-bold px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-3 border-2 border-amber-600">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-    </svg>
-    <span>Deck is empty! Reshuffling automatically...</span>
-  </div>
-
-  <div class="w-full max-w-lg mx-auto flex justify-between items-center flex-shrink-0 px-2 py-1 z-10">
-    <h1 class="text-2xl sm:text-3xl font-black italic tracking-widest drop-shadow-lg">
-      SORRY<span class="text-rose-500">!</span>
-    </h1>
-    <div class="bg-slate-900 border border-slate-600 px-4 py-2 rounded-full shadow-inner flex items-center gap-2">
-      <span class="text-slate-300 font-bold text-sm uppercase">Cards:</span>
-      <span id="card-count" class="text-2xl font-black text-amber-400">45</span>
+<div class="scene">
+  <div class="card" id="card" onclick="draw()">
+    <div class="face back">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="44" fill="#f59e0b" stroke="#fff" stroke-width="4"/>
+        <polygon points="50,18 58,40 82,40 63,54 70,78 50,64 30,78 37,54 18,40 42,40" fill="#fff"/>
+      </svg>
+      <p>TAP TO DRAW</p>
+    </div>
+    <div class="face front">
+      <div class="half top"><div class="num" id="valT"></div><div class="rule" id="ruleT"></div></div>
+      <div class="mid"><span id="again">DRAW AGAIN!</span></div>
+      <div class="half"><div class="num" id="valB"></div><div class="rule" id="ruleB"></div></div>
     </div>
   </div>
+</div>
 
-  <!-- Main Card Area (Expands to fill all available space) -->
-  <div class="flex-1 w-full max-w-lg flex items-center justify-center my-3 perspective z-0 relative">
-    
-    <!-- Decorative background stack to look like a thick deck -->
-    <div class="absolute w-[95%] h-[98%] bg-slate-400 rounded-3xl transform translate-y-3 translate-x-2 opacity-30 border-[4px] border-white z-0"></div>
-    <div class="absolute w-[95%] h-[98%] bg-slate-300 rounded-3xl transform translate-y-1.5 translate-x-1 opacity-60 border-[4px] border-white z-0"></div>
-
-    <!-- The Flippable Card -->
-    <div id="active-card" class="w-full h-full max-h-[75vh] relative transform-style-3d card-transition rounded-3xl card-shadow z-10 cursor-pointer" onclick="handleDeckClick()">
-      
-      <!-- CARD BACK (Official Graphic Recreation) -->
-      <div class="absolute inset-0 bg-[#f8f9fa] rounded-3xl backface-hidden flex items-center justify-center border-[8px] sm:border-[12px] border-slate-200 overflow-hidden shadow-inner">
-        <svg viewBox="0 0 240 360" class="w-full h-full p-2">
-          <defs>
-            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.4"/>
-            </filter>
-            <filter id="text-shadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="3" dy="3" stdDeviation="0.5" flood-color="#000" flood-opacity="0.9"/>
-            </filter>
-            
-            <g id="pawn">
-              <path d="M -16, 26 Q 0, 29 16, 26 Q 16, 16 6, 12 C 4, 8 4, 2 6, -2 A 10, 10 0 1, 0 -6, -2 C -4, 2 -4, 8 -6, 12 Q -16, 16 -16, 26 Z"/>
-              <ellipse cx="-4" cy="-8" rx="3" ry="5" transform="rotate(-30 -4 -8)" fill="white" opacity="0.6"/>
-              <path d="M -14, 24 Q -8, 26 0, 25 Q -10, 18 -4, 12 C -2, 8 -2, 2 -4, -2 A 8, 8 0 0, 1 -2, -10 A 10, 10 0 0, 0 -6, -2 C -4, 2 -4, 8 -6, 12 Q -16, 16 -16, 26 Z" fill="white" opacity="0.3"/>
-            </g>
-          </defs>
-
-          <!-- Giant Speech Bubble -->
-          <path d="M 120,30 L 210,30 A 15,15 0 0 1 225,45 L 225,315 A 15,15 0 0 1 210,330 L 120,330 A 15,15 0 0 1 105,315 L 105,195 L 85,180 L 105,165 L 105,45 A 15,15 0 0 1 120,30 Z" fill="#e11d48" filter="url(#shadow)"/>
-          
-          <g transform="translate(165, 180) rotate(-90)">
-            <text x="0" y="0" font-family="'Inter', sans-serif" font-weight="900" font-size="52" fill="white" text-anchor="middle" dominant-baseline="central" filter="url(#text-shadow)" letter-spacing="2">SORRY!</text>
-          </g>
-
-          <use href="#pawn" x="78" y="100" fill="#fbbf24" filter="url(#shadow)"/>
-          <use href="#pawn" x="73" y="145" fill="#3b82f6" filter="url(#shadow)"/>
-          <use href="#pawn" x="68" y="190" fill="#22c55e" filter="url(#shadow)"/>
-          <use href="#pawn" x="63" y="235" fill="#ef4444" filter="url(#shadow)"/>
-
-          <g transform="translate(35, 180) rotate(-90)" font-family="'Inter', sans-serif" fill="#4f46e5" text-anchor="middle">
-            <text x="0" y="-18" font-size="14" font-weight="600">the Game</text>
-            <text x="0" y="-2" font-size="14" font-weight="600">of sweet</text>
-            <text x="0" y="18" font-size="24" font-weight="900" letter-spacing="1">Revenge<tspan font-size="10" dy="-10">®</tspan></text>
-          </g>
-        </svg>
-      </div>
-
-      <!-- CARD FRONT (Realistic Physical Card Look + Mirrored Text) -->
-      <div class="absolute inset-0 bg-white rounded-3xl backface-hidden rotate-y-180 flex flex-col shadow-2xl">
-        
-        <!-- Classic White Outer Edge -->
-        <div class="absolute inset-0 border-[8px] sm:border-[12px] border-white rounded-3xl pointer-events-none z-30"></div>
-        
-        <!-- Creamy Cardstock Core -->
-        <div class="absolute inset-0 bg-[#fdfbf7] rounded-3xl pointer-events-none z-10"></div>
-        
-        <!-- Classic Thin Inner Border Line -->
-        <div class="absolute inset-[12px] sm:inset-[16px] border-2 border-slate-800 rounded-2xl pointer-events-none z-30 opacity-80"></div>
-
-        <!-- SPLIT-SCREEN CONTAINER (z-20 sits above background but below borders) -->
-        <div class="w-full h-full flex flex-col z-20 relative px-[16px] sm:px-[20px] py-[16px] sm:py-[20px]">
-          
-          <!-- TOP HALF (Flipped 180 degrees for opponent) -->
-          <div class="flex-1 flex flex-col relative transform rotate-180 items-center justify-center text-center p-2">
-            <!-- Solid Black Number -->
-            <div id="card-val-top" class="font-black massive-number w-full">1</div>
-            
-            <!-- Solid Black Rule Text -->
-            <div class="flex-1 flex items-center justify-center w-full mt-1">
-              <div id="card-rule-top" class="font-extrabold massive-rule px-1">
-                Move a pawn from Start or move forward 1 space.
-              </div>
-            </div>
-          </div>
-
-          <!-- Subtle Divider Line -->
-          <div class="w-full border-t-2 border-dashed border-slate-300 opacity-60 my-1"></div>
-          
-          <!-- BOTTOM HALF (Right-side up for you) -->
-          <div class="flex-1 flex flex-col relative items-center justify-center text-center p-2">
-            <!-- Solid Black Number -->
-            <div id="card-val-bottom" class="font-black massive-number w-full">1</div>
-            
-            <!-- Solid Black Rule Text -->
-            <div class="flex-1 flex items-center justify-center w-full mt-1">
-              <div id="card-rule-bottom" class="font-extrabold massive-rule px-1">
-                Move a pawn from Start or move forward 1 space.
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
+<div class="controls">
+  <button class="draw" id="drawBtn" onclick="draw()">Draw Card</button>
+  <div class="row">
+    <button onclick="shuffle()">&#8635; Shuffle</button>
+    <button id="readBtn" onclick="readAloud()">&#128266; Read</button>
+    <button id="soundBtn" onclick="toggleSound()">&#128276; Sound</button>
   </div>
+</div>
 
-  <!-- Bottom Control Bar -->
-  <div class="w-full max-w-lg flex flex-col sm:flex-row gap-3 flex-shrink-0 z-10 pb-2">
-    <button onclick="handleDeckClick()" class="flex-1 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-black font-black text-2xl py-4 sm:py-5 rounded-2xl shadow-xl transform transition active:scale-95 border-b-[6px] border-amber-600 uppercase tracking-widest flex items-center justify-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" /></svg>
-      Draw Card
-    </button>
-    
-    <button onclick="shuffleDeck()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white font-bold text-lg py-4 px-6 rounded-2xl shadow-lg transform transition active:scale-95 border-b-[4px] border-slate-950 flex items-center justify-center gap-2 uppercase tracking-wide">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
-      Shuffle
-    </button>
-  </div>
+<script>
+  /* ---------- CARDS (edit rules here) ---------- */
+  // 45 cards: five 1s, and four of everything else.
+  const CARD_RULES = [
+    { val: "1",  text: "Move a pawn from Start OR move forward 1 space.", count: 5 },
+    { val: "2",  text: "Move from Start OR move forward 2. DRAW AGAIN.", count: 4 },
+    { val: "3",  text: "Move one pawn forward 3 spaces.", count: 4 },
+    { val: "4",  text: "Move one pawn backward 4 spaces.", count: 4 },
+    { val: "5",  text: "Move one pawn forward 5 spaces.", count: 4 },
+    { val: "7",  text: "Move forward 7 spaces OR split between two pawns.", count: 4 },
+    { val: "8",  text: "Move one pawn forward 8 spaces.", count: 4 },
+    { val: "10", text: "Move forward 10 spaces OR backward 1 space.", count: 4 },
+    { val: "11", text: "Move forward 11 spaces OR switch places with an opponent.", count: 4 },
+    { val: "12", text: "Move one pawn forward 12 spaces.", count: 4 },
+    { val: "SORRY!", text: "Take a pawn from Start, place it on an opponent's pawn, and send them back to Start.", count: 4 }
+  ];
 
-  <script>
-    // Official Sorry! Deck Requirements: 45 cards total.
-    // 5x 1s. 4x of everything else (2,3,4,5,7,8,10,11,12,SORRY!)
-    const CARD_RULES = [
-      { val: "1", text: "Move a pawn from Start OR move forward 1 space.", count: 5 },
-      { val: "2", text: "Move from Start OR move forward 2. DRAW AGAIN.", count: 4 },
-      { val: "3", text: "Move one pawn forward 3 spaces.", count: 4 },
-      { val: "4", text: "Move one pawn backward 4 spaces.", count: 4 },
-      { val: "5", text: "Move one pawn forward 5 spaces.", count: 4 },
-      { val: "7", text: "Move forward 7 spaces OR split between two pawns.", count: 4 },
-      { val: "8", text: "Move one pawn forward 8 spaces.", count: 4 },
-      { val: "10", text: "Move forward 10 spaces OR backward 1 space.", count: 4 },
-      { val: "11", text: "Move forward 11 spaces OR switch places with an opponent.", count: 4 },
-      { val: "12", text: "Move one pawn forward 12 spaces.", count: 4 },
-      { val: "SORRY!", text: "Take a pawn from Start, place it on an opponent's pawn, and send them back to Start.", count: 4 }
-    ];
+  /* ---------- STATE (saved on the phone so a game survives closing the app) ---------- */
+  const KEY = "sorry_deck_v2";
+  let deck = [], history = [], current = null, flipped = false, busy = false, soundOn = true;
+  const $ = id => document.getElementById(id);
+  const card = $("card");
 
-    let deck = [];
-    let isFlipped = false;
-    let isAnimating = false;
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ deck, history, current, soundOn })); } catch (e) {} }
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (s && Array.isArray(s.deck)) { deck = s.deck; history = s.history || []; current = s.current || null; soundOn = s.soundOn !== false; return true; }
+    } catch (e) {}
+    return false;
+  }
 
-    // DOM Elements
-    const cardElement = document.getElementById('active-card');
-    const valTop = document.getElementById('card-val-top');
-    const valBottom = document.getElementById('card-val-bottom');
-    const ruleTop = document.getElementById('card-rule-top');
-    const ruleBottom = document.getElementById('card-rule-bottom');
-    const countText = document.getElementById('card-count');
-    const toastMessage = document.getElementById('toast-message');
-
-    function showToast() {
-      // Remove and re-add class to restart animation
-      toastMessage.classList.remove('toast-animate');
-      void toastMessage.offsetWidth; // trigger reflow
-      toastMessage.classList.add('toast-animate');
+  function newDeck() {
+    deck = [];
+    CARD_RULES.forEach(c => { for (let i = 0; i < c.count; i++) deck.push({ val: c.val, text: c.text }); });
+    for (let i = deck.length - 1; i > 0; i--) {            // Fisher-Yates shuffle
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
     }
+    history = []; current = null;
+  }
 
-    function generateDeck() {
-      deck = [];
-      CARD_RULES.forEach(cardType => {
-        for (let i = 0; i < cardType.count; i++) {
-          deck.push({ val: cardType.val, text: cardType.text });
-        }
-      });
-      // Fisher-Yates Shuffle Algorithm
-      for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-      }
-      updateCountUI();
-    }
+  /* ---------- SCREEN ---------- */
+  function render() {
+    $("count").textContent = deck.length;
+    $("recent").innerHTML = history.length
+      ? "Last:" + history.map(v => `<span class="rc">${v}</span>`).join("") : "";
+    $("tally").innerHTML = CARD_RULES.map(r => {
+      const n = deck.filter(c => c.val === r.val).length;
+      return `<span class="chip ${n ? "" : "zero"}">${r.val}<b>${n}</b></span>`;
+    }).join("");
+    const again = current && current.val === "2";
+    $("again").classList.toggle("show", !!again && flipped);
+    $("drawBtn").classList.toggle("again", !!again && flipped);
+    $("drawBtn").textContent = again && flipped ? "Draw Again!" : "Draw Card";
+    $("soundBtn").innerHTML = soundOn ? "&#128276; Sound" : "&#128277; Muted";
+  }
 
-    function updateCountUI() {
-      countText.textContent = deck.length;
-    }
+  function fillCard(c) {
+    const big = c.val === "SORRY!" ? "num sorry" : "num";
+    const rule = c.text.length > 60 ? "rule long" : "rule";
+    ["T", "B"].forEach(k => {
+      $("val" + k).textContent = c.val; $("val" + k).className = big;
+      $("rule" + k).textContent = c.text; $("rule" + k).className = rule;
+    });
+  }
 
-    function handleDeckClick() {
-      if (isAnimating) return; 
-      
-      if (deck.length === 0) {
-        showToast();
-        shuffleDeck();
-        return;
-      }
+  function toggleTally() { $("tally").hidden = !$("tally").hidden; }
 
-      isAnimating = true;
+  /* ---------- ACTIONS ---------- */
+  function draw() {
+    if (busy) return;
+    wake();
+    if (deck.length === 0) { toast(); shuffle(true); return; }
+    busy = true;
+    if (flipped) {                       // flip face down first, then draw the next card
+      card.classList.remove("flip"); flipped = false; render();
+      setTimeout(next, 300);
+    } else next();
+  }
 
-      if (isFlipped) {
-        // Flip back to red face first
-        cardElement.classList.remove('rotate-y-180');
-        isFlipped = false;
-        
-        // Wait for flip back to finish, then update and draw new card
-        setTimeout(() => {
-          drawNextCard();
-        }, 300); 
-      } else {
-        // Draw immediately if already face down
-        drawNextCard();
-      }
-    }
+  function next() {
+    const c = deck.pop();
+    current = c; history.unshift(c.val); history = history.slice(0, 5);
+    fillCard(c);
+    card.classList.add("flip"); flipped = true;
+    render(); save();
+    beep(c.val === "SORRY!" ? "low" : "flip");
+    buzz(c.val === "2" ? [30, 60, 30] : 15);
+    setTimeout(() => { busy = false; }, 400);
+  }
 
-    function applyTextScaling(val, text) {
-      // Apply correct sizing class based on card type
-      if (val === "SORRY!") {
-        valTop.className = "font-black sorry-title w-full";
-        valBottom.className = "font-black sorry-title w-full";
-      } else {
-        valTop.className = "font-black massive-number w-full";
-        valBottom.className = "font-black massive-number w-full";
-      }
+  function shuffle(auto) {
+    if (busy && !auto) return;
+    busy = true;
+    card.classList.remove("flip"); flipped = false;
+    setTimeout(() => { newDeck(); render(); save(); busy = false; }, 400);
+  }
 
-      // Slightly shrink text size for longer rules to prevent overflow
-      if (text.length > 60) {
-         ruleTop.className = "font-extrabold massive-rule long-text px-1";
-         ruleBottom.className = "font-extrabold massive-rule long-text px-1";
-      } else {
-         ruleTop.className = "font-extrabold massive-rule px-1";
-         ruleBottom.className = "font-extrabold massive-rule px-1";
-      }
-    }
+  function toast() { const t = $("toast"); t.classList.remove("show"); void t.offsetWidth; t.classList.add("show"); }
 
-    function drawNextCard() {
-      const card = deck.pop();
-      updateCountUI();
+  /* ---------- EXTRAS: sound, buzz, read aloud, screen awake ---------- */
+  let audio = null;
+  function beep(kind) {
+    if (!soundOn) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const [f1, f2] = kind === "low" ? [330, 140] : [320, 560];
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = "triangle"; o.frequency.setValueAtTime(f1, audio.currentTime);
+      o.frequency.exponentialRampToValueAtTime(f2, audio.currentTime + 0.12);
+      g.gain.setValueAtTime(0.15, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.18);
+      o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + 0.2);
+    } catch (e) {}
+  }
+  function buzz(p) { if (soundOn && navigator.vibrate) navigator.vibrate(p); }   // Android only
+  function toggleSound() { soundOn = !soundOn; render(); save(); }
 
-      // Update both top (mirrored) and bottom text content
-      valTop.textContent = card.val;
-      valBottom.textContent = card.val;
-      ruleTop.textContent = card.text;
-      ruleBottom.textContent = card.text;
+  function readAloud() {
+    if (!("speechSynthesis" in window) || !current) return;
+    speechSynthesis.cancel();
+    const say = (current.val === "SORRY!" ? "Sorry! " : current.val + ". ") + current.text.replace("SORRY!", "Sorry");
+    speechSynthesis.speak(new SpeechSynthesisUtterance(say));
+  }
 
-      applyTextScaling(card.val, card.text);
+  let lock = null;
+  async function wake() { try { if ("wakeLock" in navigator) lock = await navigator.wakeLock.request("screen"); } catch (e) {} }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") wake(); });
 
-      // Trigger 3D flip animation
-      cardElement.style.animation = 'none';
-      cardElement.offsetHeight; // trigger reflow
-      cardElement.classList.add('rotate-y-180');
-      
-      // Add subtle Flash effect
-      cardElement.style.animation = 'cardFlash 0.5s ease-out forwards';
-      
-      isFlipped = true;
-
-      setTimeout(() => {
-        isAnimating = false;
-      }, 400);
-    }
-
-    function shuffleDeck() {
-      if (isAnimating) return;
-      isAnimating = true;
-      
-      cardElement.classList.remove('rotate-y-180');
-      isFlipped = false;
-
-      // Small delay to allow card to flip face down before updating count
-      setTimeout(() => {
-        generateDeck();
-        isAnimating = false;
-      }, 400);
-    }
-
-    // Initialize Game Deck on startup
-    generateDeck();
-  </script>
-  <script>
+  /* ---------- START ---------- */
+  if (!("speechSynthesis" in window)) $("readBtn").style.display = "none";
+  if (!load()) newDeck();
+  if (current) {                          // restore a card that was face-up when the app closed
+    fillCard(current);
+    card.classList.add("noanim", "flip"); flipped = true;
+    void card.offsetWidth; card.classList.remove("noanim");
+  }
+  render();
+  wake();
+</script>
+<script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
   }
 </script>
-
-  
 </body>
 </html>
