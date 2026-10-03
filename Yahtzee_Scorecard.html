@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest-yahtzee.json">
+<meta name="theme-color" content="#b91c1c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-yahtzee-192.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yahtzee Scorecard</title>
+<style>
+  /* Self-contained: no outside files. */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; color: #fff; touch-action: manipulation;
+    font-family: ui-rounded, "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(circle at top, #7f1d1d 0%, #0f172a 75%);
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+             max(18px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  h1 { margin: 0 0 10px; font-size: 24px; letter-spacing: .06em; text-transform: uppercase; }
+  h2 { margin: 18px 0 8px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #fca5a5; }
+
+  /* Players */
+  #players { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { flex: 1 1 30%; background: rgba(15,23,42,.75); border: 2px solid #334155; border-radius: 14px; padding: 8px 6px; text-align: center; }
+  .chip.on { border-color: #fbbf24; background: #1e293b; }
+  .chip b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip span { font-size: 22px; font-weight: 900; color: #fde68a; }
+  .add { flex: 0 0 auto; align-self: stretch; padding: 0 16px; background: transparent; border: 2px dashed #64748b; border-radius: 14px; font-size: 22px; font-weight: 900; }
+  #winner { display: none; margin-top: 10px; text-align: center; font-weight: 900; font-size: 18px; background: #fbbf24; color: #000; border-radius: 14px; padding: 12px; }
+  #winner.show { display: block; }
+
+  /* Score rows */
+  .row { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 54px; margin-bottom: 6px; padding: 6px 14px;
+         background: rgba(15,23,42,.75); border: 1px solid #334155; border-radius: 12px; text-align: left; }
+  button.row:active { transform: scale(.98); }
+  .row.done { border-color: #475569; background: #1e293b; }
+  .lbl b { display: block; font-size: 16px; }
+  .lbl small { color: #94a3b8; font-size: 12px; }
+  .val { font-size: 26px; font-weight: 900; color: #fde68a; min-width: 48px; text-align: right; }
+  .val.empty { color: #475569; }
+  .val.zero { color: #94a3b8; }
+  .sub { background: rgba(127,29,29,.5); border-color: #b91c1c; }
+  .ctl { display: flex; align-items: center; gap: 8px; }
+  .ctl button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: #334155; font-size: 20px; font-weight: 900; }
+  .ctl button:disabled { opacity: .3; }
+  .ctl span { min-width: 30px; text-align: center; font-size: 22px; font-weight: 900; color: #fde68a; }
+
+  .grand { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 14px 16px; border-radius: 16px;
+           background: #fbbf24; color: #000; font-weight: 900; font-size: 18px; text-transform: uppercase; letter-spacing: .06em; }
+  .grand span { font-size: 40px; }
+
+  .tools { display: flex; gap: 8px; margin-top: 18px; }
+  .tools button { flex: 1; background: #1e293b; border: 1px solid #475569; border-radius: 12px; padding: 12px 6px; font-size: 13px; font-weight: 800; text-transform: uppercase; }
+  .tools .danger { border-color: #be123c; color: #fda4af; }
+
+  /* Picker sheet */
+  #sheet { display: none; position: fixed; inset: 0; z-index: 10; background: rgba(2,6,23,.7); align-items: flex-end; justify-content: center; }
+  #sheet.show { display: flex; }
+  .panel { width: 100%; max-width: 520px; background: #1e293b; border-radius: 22px 22px 0 0; padding: 16px 14px max(16px, env(safe-area-inset-bottom)); }
+  .panel h3 { margin: 0 0 4px; font-size: 20px; }
+  .panel p { margin: 0 0 12px; color: #94a3b8; font-size: 13px; }
+  .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+  .opts button { padding: 14px 0; font-size: 22px; font-weight: 900; border: 0; border-radius: 12px; background: #fbbf24; color: #000; }
+  .opts button.zero { background: #475569; color: #fff; }
+  .opts button.wide { grid-column: span 2; }
+  .panel .foot { display: flex; gap: 8px; margin-top: 12px; }
+  .panel .foot button { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #64748b; background: transparent; font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>&#127922; Yahtzee Scorecard</h1>
+
+  <div id="players"></div>
+  <div id="winner"></div>
+
+  <h2 id="who">Upper Section</h2>
+  <div id="upper"></div>
+
+  <h2>Lower Section</h2>
+  <div id="lower"></div>
+
+  <div id="totals"></div>
+
+  <div class="tools">
+    <button onclick="renamePlayer()">&#9998; Rename</button>
+    <button onclick="removePlayer()">&minus; Remove</button>
+    <button class="danger" onclick="newGame()">New Game</button>
+  </div>
+</div>
+
+<div id="sheet" onclick="if (event.target === this) closePick()">
+  <div class="panel">
+    <h3 id="pTitle"></h3><p id="pHint"></p>
+    <div class="opts" id="pOpts"></div>
+    <div class="foot"><button onclick="pick(null)">Clear box</button><button onclick="closePick()">Cancel</button></div>
+  </div>
+</div>
+
+<script>
+  /* ---------- THE SCORECARD (edit labels here) ---------- */
+  // kind: "n" = count of one number, "fixed" = set points, "sum" = total of all dice
+  const CATS = [
+    { id: "1", label: "Aces",   face: "\u2680", sec: "u", kind: "n", n: 1, hint: "Add up only the 1s" },
+    { id: "2", label: "Twos",   face: "\u2681", sec: "u", kind: "n", n: 2, hint: "Add up only the 2s" },
+    { id: "3", label: "Threes", face: "\u2682", sec: "u", kind: "n", n: 3, hint: "Add up only the 3s" },
+    { id: "4", label: "Fours",  face: "\u2683", sec: "u", kind: "n", n: 4, hint: "Add up only the 4s" },
+    { id: "5", label: "Fives",  face: "\u2684", sec: "u", kind: "n", n: 5, hint: "Add up only the 5s" },
+    { id: "6", label: "Sixes",  face: "\u2685", sec: "u", kind: "n", n: 6, hint: "Add up only the 6s" },
+    { id: "3k", label: "3 of a Kind",  sec: "l", kind: "sum", hint: "3+ the same: add all five dice" },
+    { id: "4k", label: "4 of a Kind",  sec: "l", kind: "sum", hint: "4+ the same: add all five dice" },
+    { id: "fh", label: "Full House",   sec: "l", kind: "fixed", pts: 25, hint: "3 of one + 2 of another = 25" },
+    { id: "ss", label: "Sm. Straight", sec: "l", kind: "fixed", pts: 30, hint: "4 in a row = 30" },
+    { id: "ls", label: "Lg. Straight", sec: "l", kind: "fixed", pts: 40, hint: "5 in a row = 40" },
+    { id: "y",  label: "YAHTZEE",      sec: "l", kind: "fixed", pts: 50, hint: "5 of a kind = 50" },
+    { id: "ch", label: "Chance",       sec: "l", kind: "sum", hint: "Any roll: add all five dice" }
+  ];
+  const BONUS_NEEDED = 63, BONUS_POINTS = 35, YAHTZEE_BONUS = 100, MAX_PLAYERS = 6;
+
+  /* ---------- STATE (saved on the phone) ---------- */
+  const KEY = "yahtzee_v1";
+  let players = [{ name: "Player 1", s: {}, yb: 0 }], active = 0, pending = null;
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ players, active })); } catch (e) {} };
+  function load() {
+    try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.players && d.players.length) { players = d.players; active = Math.min(d.active || 0, players.length - 1); } } catch (e) {}
+  }
+
+  /* ---------- THE MATH ---------- */
+  function calc(p) {
+    const val = c => p.s[c.id] || 0;
+    const upper = CATS.filter(c => c.sec === "u"), lower = CATS.filter(c => c.sec === "l");
+    const sub = upper.reduce((t, c) => t + val(c), 0);
+    const bonus = sub >= BONUS_NEEDED ? BONUS_POINTS : 0;
+    const low = lower.reduce((t, c) => t + val(c), 0) + p.yb * YAHTZEE_BONUS;
+    const upperDone = upper.every(c => p.s[c.id] !== undefined);
+    return { sub, bonus, low, upperTotal: sub + bonus, total: sub + bonus + low, upperDone, filled: Object.keys(p.s).length };
+  }
+
+  /* ---------- SCREEN ---------- */
+  function render() {
+    const stats = players.map(calc), best = Math.max(...stats.map(s => s.total));
+    $("players").innerHTML = players.map((p, i) =>
+      `<div class="chip ${i === active ? "on" : ""}" onclick="active=${i};save();render()"><b>${best > 0 && stats[i].total === best ? "&#9819; " : ""}${esc(p.name)}</b><span>${stats[i].total}</span></div>`
+    ).join("") + (players.length < MAX_PLAYERS ? `<button class="add" onclick="addPlayer()">+</button>` : "");
+
+    const done = stats.every(s => s.filled === CATS.length);
+    $("winner").classList.toggle("show", done);
+    if (done) {
+      const w = players.filter((p, i) => stats[i].total === best).map(p => esc(p.name));
+      $("winner").innerHTML = `&#127942; ${w.length > 1 ? "Tie: " : "Winner: "}${w.join(" & ")} &mdash; ${best} pts`;
+    }
+
+    const p = players[active], s = stats[active];
+    $("who").textContent = `${p.name} \u2014 Upper Section`;
+    const rowHTML = c => {
+      const v = p.s[c.id], cls = v === undefined ? "empty" : v === 0 ? "zero" : "";
+      return `<button class="row ${v === undefined ? "" : "done"}" onclick="openPick('${c.id}')"><span class="lbl"><b>${c.face ? c.face + " " : ""}${c.label}</b><small>${c.hint}</small></span><span class="val ${cls}">${v === undefined ? "\u2013" : v}</span></button>`;
+    };
+    const stat = (label, hint, value, extra = "") => `<div class="row sub ${extra}"><span class="lbl"><b>${label}</b><small>${hint}</small></span><span class="val">${value}</span></div>`;
+
+    $("upper").innerHTML = CATS.filter(c => c.sec === "u").map(rowHTML).join("") +
+      stat("Upper Subtotal", "Sum of the six boxes", s.sub) +
+      stat(`Bonus (${BONUS_NEEDED}+)`, s.bonus ? "Earned!" : s.upperDone ? "Missed" : `Need ${BONUS_NEEDED - s.sub} more`, s.bonus);
+
+    const canBonus = p.s.y === 50;
+    $("lower").innerHTML = CATS.filter(c => c.sec === "l").map(rowHTML).join("") +
+      `<div class="row"><span class="lbl"><b>Yahtzee Bonus</b><small>${canBonus ? `+${YAHTZEE_BONUS} for each extra Yahtzee` : "Needs 50 in the Yahtzee box first"}</small></span>
+        <span class="ctl"><button ${p.yb ? "" : "disabled"} onclick="bonusAdj(-1)">&minus;</button><span>${p.yb}</span><button ${canBonus ? "" : "disabled"} onclick="bonusAdj(1)">+</button></span></div>`;
+
+    $("totals").innerHTML =
+      stat("Upper Total", "Subtotal + bonus", s.upperTotal) +
+      stat("Lower Total", "Includes Yahtzee bonus", s.low) +
+      `<div class="grand">Grand Total<span>${s.total}</span></div>`;
+  }
+
+  /* ---------- ENTERING SCORES ---------- */
+  function openPick(id) {
+    const c = CATS.find(x => x.id === id); pending = c;
+    let opts;
+    if (c.kind === "n") opts = [0, 1, 2, 3, 4, 5].map(k => k * c.n);
+    else if (c.kind === "fixed") opts = [c.pts, 0];
+    else opts = [0].concat(Array.from({ length: 26 }, (_, i) => i + 5));
+    $("pTitle").textContent = c.label;
+    $("pHint").textContent = c.kind === "fixed" ? `Tap ${c.pts} if you scored it, or 0 to scratch.` : c.kind === "n" ? "Tap the total of those dice (0 = scratch)." : "Tap the total of your five dice (0 = scratch).";
+    $("pOpts").innerHTML = opts.map(v => `<button class="${v === 0 ? "zero" : ""} ${c.kind === "fixed" ? "wide" : ""}" onclick="pick(${v})">${v === 0 && c.kind === "fixed" ? "0 \u2014 Scratch" : v}</button>`).join("");
+    $("sheet").classList.add("show");
+  }
+  function closePick() { $("sheet").classList.remove("show"); pending = null; }
+  function pick(v) {
+    const p = players[active];
+    if (v === null) { delete p.s[pending.id]; if (pending.id === "y") p.yb = 0; }
+    else { p.s[pending.id] = v; if (pending.id === "y" && v !== 50) p.yb = 0; }
+    closePick(); save(); render(); if (navigator.vibrate) navigator.vibrate(10);
+  }
+  function bonusAdj(d) { const p = players[active]; p.yb = Math.max(0, p.yb + d); save(); render(); }
+
+  /* ---------- PLAYERS AND GAMES ---------- */
+  function addPlayer() {
+    players.push({ name: "Player " + (players.length + 1), s: {}, yb: 0 }); active = players.length - 1;
+    save(); render(); renamePlayer();
+  }
+  function renamePlayer() {
+    const n = prompt("Player name:", players[active].name);
+    if (n && n.trim()) { players[active].name = n.trim().slice(0, 14); save(); render(); }
+  }
+  function removePlayer() {
+    if (players.length < 2) return;
+    if (confirm(`Remove ${players[active].name}?`)) { players.splice(active, 1); active = 0; save(); render(); }
+  }
+  function newGame() {
+    if (confirm("Start a new game? All scores will be cleared (player names stay).")) {
+      players.forEach(p => { p.s = {}; p.yb = 0; }); save(); render();
+    }
+  }
+
+  let lock = null;
+  async function wake() { try { if ("wakeLock" in navigator) lock = await navigator.wakeLock.request("screen"); } catch (e) {} }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") wake(); });
+  document.addEventListener("pointerdown", wake, { once: true });
+
+  load(); render(); wake();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
+</body>
+</html>
