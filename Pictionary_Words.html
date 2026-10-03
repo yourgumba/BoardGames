@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest-pictionary.json">
+<meta name="theme-color" content="#be185d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-pictionary-192.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pictionary Words</title>
+<style>
+  /* Self-contained: no outside files. */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body { display: flex; flex-direction: column; height: 100dvh; color: #fff; touch-action: manipulation;
+    font-family: ui-rounded, "Segoe UI", system-ui, sans-serif; background: radial-gradient(circle at top, #9d174d 0%, #0f172a 75%);
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  button, select { font: inherit; color: inherit; cursor: pointer; }
+  .wrap { width: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  h1 { margin: 0 0 10px; font-size: 24px; letter-spacing: .06em; text-transform: uppercase; }
+  .modes { display: flex; gap: 8px; }
+  .modes button { flex: 1; padding: 12px; border-radius: 14px; border: 2px solid #475569; background: #1e293b; font-size: 18px; font-weight: 800; }
+  .modes button.on { border-color: #fbbf24; background: #be185d; }
+  #card { flex: 1; min-height: 160px; margin: 12px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 16px;
+          background: #fdfbf7; color: #0f172a; border-radius: 24px; box-shadow: 0 15px 35px -5px rgba(0,0,0,.7); cursor: pointer; user-select: none; -webkit-user-select: none; }
+  #card.hide { background: repeating-linear-gradient(45deg, #be185d 0 16px, #9d174d 16px 32px); color: #fff; }
+  #word { font-weight: 900; line-height: 1.05; font-size: clamp(2.4rem, 11vw, 4.6rem); word-break: break-word; }
+  #card small { margin-top: 12px; font-size: 14px; font-weight: 700; opacity: .6; }
+  #timer { text-align: center; font-size: 40px; font-weight: 900; font-variant-numeric: tabular-nums; min-height: 48px; color: #fde68a; }
+  #timer.end { color: #f87171; animation: blink .5s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
+  .big { width: 100%; padding: 16px; background: #fbbf24; color: #000; border: 0; border-bottom: 6px solid #d97706; border-radius: 16px; font-size: 22px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+  .big:active { transform: scale(.97); }
+  .opts { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; font-weight: 700; }
+  .opts label { display: flex; align-items: center; gap: 8px; }
+  .opts input { width: 22px; height: 22px; }
+  .opts select { background: #0f172a; border: 1px solid #475569; border-radius: 10px; padding: 8px 10px; }
+  .msg { text-align: center; color: #94a3b8; font-size: 13px; margin: 8px 0 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>&#9999;&#65039; Pictionary Words</h1>
+  <div class="modes">
+    <button id="mKids" onclick="setMode('kids')">&#129490; Kids</button>
+    <button id="mAdults" onclick="setMode('adults')">&#129489; Adults</button>
+  </div>
+
+  <div id="card" onclick="flipCard()"><div id="word"></div><small id="hint"></small></div>
+  <div id="timer"></div>
+
+  <button class="big" onclick="nextWord()">Next word</button>
+  <div class="opts">
+    <label><input type="checkbox" id="useTimer" checked> Timer</label>
+    <select id="secs"><option value="30">30 sec</option><option value="60" selected>60 sec</option><option value="90">90 sec</option><option value="120">2 min</option></select>
+  </div>
+  <p class="msg" id="left"></p>
+</div>
+
+<script>
+  /* ---------- WORD LISTS (add or remove words here) ---------- */
+  const WORDS = {
+    kids: ["Cat","Dog","Pizza","Ice cream","Elephant","Rainbow","Bicycle","Sun","Moon","Tree","House","Fish","Butterfly","Banana","Apple","Car","Train",
+      "Airplane","Boat","Rocket","Robot","Dinosaur","Snowman","Birthday cake","Balloon","Teddy bear","Snake","Frog","Spider","Flower","Cookie","Hamburger",
+      "Clock","Umbrella","Hat","Shoe","Star","Heart","Ghost","Pirate","Dragon","Princess","Mermaid","Monkey","Lion","Penguin","Giraffe","Turtle","Bird",
+      "Cow","Pig","Horse","Duck","Bee","Octopus","Whale","Shark","Crab","Castle","Bridge","Mountain","Volcano","Campfire","Tent","Swing","Slide","Kite",
+      "Ball","Drum","Guitar","Brushing teeth","Swimming","Jumping","Dancing","Sleeping","Eating spaghetti","Riding a horse","Playing soccer","Flying a kite",
+      "Taking a bath","Rain","Snowflake","Bus","School","Crown"],
+    adults: ["Karaoke","Procrastination","Mortgage","Jet lag","Traffic jam","Black hole","Time machine","Identity theft","Stock market","Yoga class","Road rage",
+      "Group project","Midlife crisis","Garage sale","Blind date","Rush hour","Job interview","Power nap","Sunburn","Fireworks","Hot air balloon","Tightrope",
+      "Magic trick","Scuba diving","Bungee jumping","Cryptocurrency","Social media","Selfie stick","Photobomb","Wi-Fi","Microwave","Vacuum cleaner","Lawn mower",
+      "Snowboarding","Skydiving","Roller coaster","Escape room","Treasure map","Haunted house","Fortune teller","Lighthouse","Drive-through","Airport security",
+      "Passport","Souvenir","Camping trip","Barbecue","Wine tasting","Coffee addiction","Daylight saving","Leap year","D\u00E9j\u00E0 vu","Laundry day","Tax return",
+      "Retirement","Wedding toast","Bridal shower","Baby shower","Surprise party","Family reunion","Road trip","Fantasy football","Marathon","Gym membership",
+      "Self-checkout","Paper cut","Brain freeze","Writer's block","Rat race","Elbow grease","Cold feet","Piece of cake","Raining cats and dogs","Break the ice",
+      "Spill the beans","Hangry","Bucket list","Rollercoaster of emotions","Binge-watching","Out of office"]
+  };
+
+  const $ = id => document.getElementById(id);
+  function rnd(n) { const lim = Math.floor(4294967296 / n) * n, a = new Uint32Array(1); do { crypto.getRandomValues(a); } while (a[0] >= lim); return a[0] % n; }
+  function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  /* ---------- STATE ---------- */
+  let mode = "kids", deck = [], cur = "", shown = false, started = false, tick = null, endAt = 0, audio = null;
+  try { const m = localStorage.getItem("pw_mode"); if (m === "adults") mode = m; } catch (e) {}
+
+  function render() {
+    $("mKids").classList.toggle("on", mode === "kids"); $("mAdults").classList.toggle("on", mode === "adults");
+    $("card").classList.toggle("hide", !shown);
+    $("word").textContent = !cur ? "" : shown ? cur : "Tap to reveal";
+    $("hint").textContent = !cur ? "" : shown ? "Tap to hide again" : "Only the drawer should look!";
+    $("left").textContent = deck.length + " words left before the list reshuffles";
+  }
+
+  function setMode(m) { mode = m; deck = []; try { localStorage.setItem("pw_mode", m); } catch (e) {} nextWord(); }
+
+  function nextWord() {
+    if (!deck.length) deck = shuffle(WORDS[mode]);
+    cur = deck.pop(); shown = false; started = false; stopTimer(); render();
+  }
+
+  function flipCard() {
+    if (!cur) return;
+    shown = !shown;
+    if (shown && !started) startTimer();
+    if (navigator.vibrate) navigator.vibrate(10);
+    render();
+  }
+
+  /* ---------- TIMER ---------- */
+  function stopTimer() { clearInterval(tick); $("timer").textContent = ""; $("timer").classList.remove("end"); }
+  function startTimer() {
+    started = true; if (!$("useTimer").checked) return;
+    endAt = Date.now() + (+$("secs").value) * 1000;
+    const draw = () => {
+      const left = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      $("timer").textContent = Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0");
+      if (left <= 0) { clearInterval(tick); $("timer").textContent = "Time's up!"; $("timer").classList.add("end"); alarm(); }
+    };
+    draw(); tick = setInterval(draw, 200);
+  }
+  function alarm() {
+    if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 500]);
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      for (let i = 0; i < 3; i++) {
+        const t = audio.currentTime + i * 0.35, o = audio.createOscillator(), g = audio.createGain();
+        o.type = "square"; o.frequency.value = 880; g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+        o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + 0.3);
+      }
+    } catch (e) {}
+  }
+
+  let lock = null;
+  async function wake() { try { if ("wakeLock" in navigator) lock = await navigator.wakeLock.request("screen"); } catch (e) {} }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") wake(); });
+  document.addEventListener("pointerdown", wake, { once: true });
+
+  nextWord(); wake();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
+</body>
+</html>

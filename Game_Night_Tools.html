@@ -118,7 +118,7 @@
   </section>
 
   <!-- COIN -->
-  <section class="tool" id="coin">
+  <section class="tool" id="flip">
     <div class="card">
       <div class="coinbox"><div id="coin"><div class="h">H</div><div class="t">T</div></div></div>
       <div class="out" id="coinOut">Tap to flip</div>
@@ -141,7 +141,8 @@
 <script>
   const $ = id => document.getElementById(id);
   const PAL = ["#ef4444", "#f59e0b", "#22c55e", "#06b6d4", "#3b82f6", "#a855f7", "#ec4899", "#84cc16"];
-  const TABS = [["spin", "\uD83C\uDFA1 Spinner"], ["time", "\u23F1 Timer"], ["first", "\uD83D\uDC46 First Player"], ["coin", "\uD83E\uDE99 Coin"], ["team", "\uD83D\uDC65 Teams"]];
+  const TABS = [["spin", "\uD83C\uDFA1 Spinner"], ["time", "\u23F1 Timer"], ["first", "\uD83D\uDC46 First Player"], ["flip", "\uD83E\uDE99 Coin"], ["team", "\uD83D\uDC65 Teams"]];
+  const COLOR_MAP = { Red: "#ef4444", Blue: "#3b82f6", Green: "#22c55e", Yellow: "#facc15" };
   const NEEDS_NAMES = ["spin", "first", "team"];
 
   /* Fair random number 0..n-1 (secure generator) */
@@ -174,7 +175,7 @@
     const seg = 2 * Math.PI / L.length, fs = L.length <= 8 ? 22 : L.length <= 12 ? 17 : 13;
     L.forEach((t, i) => {
       const a0 = -Math.PI / 2 + i * seg;
-      c.fillStyle = PAL[i % PAL.length]; c.beginPath(); c.moveTo(R, R); c.arc(R, R, R, a0, a0 + seg); c.fill();
+      c.fillStyle = $("spinSet").value === "colors" ? (COLOR_MAP[t] || "#64748b") : PAL[i % PAL.length]; c.beginPath(); c.moveTo(R, R); c.arc(R, R, R, a0, a0 + seg); c.fill();
       c.save(); c.translate(R, R); c.rotate(a0 + seg / 2); c.textAlign = "right"; c.fillStyle = "#fff"; c.strokeStyle = "rgba(0,0,0,.6)"; c.lineWidth = 3;
       c.font = `900 ${fs}px sans-serif`; const label = t.length > 11 ? t.slice(0, 10) + "\u2026" : t; c.strokeText(label, R - 14, fs / 3); c.fillText(label, R - 14, fs / 3); c.restore();
     });
