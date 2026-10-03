@@ -67,6 +67,17 @@
   #hist { list-style: none; margin: 0; padding: 0; font-size: 14px; color: #cbd5e1; }
   #hist li { display: flex; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid #1e293b; }
   #hist b { color: #fde68a; }
+
+  /* Full-screen roll view: only the rolled dice, as large as the screen allows */
+  #stage { display: none; position: fixed; inset: 0; z-index: 50; flex-direction: column; background: radial-gradient(circle at top, #4c1d95 0%, #0f172a 80%);
+           padding: max(12px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)); }
+  #stage.show { display: flex; }
+  .stageTop { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: #c7d2fe; font-weight: 800; }
+  #backBtn { background: #1e293b; border: 1px solid #475569; border-radius: 12px; padding: 10px 14px; color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+  #stageBody { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; overflow: auto; }
+  #stage #results { align-content: center; }
+  #stage #results .die { width: var(--dsz, 64px) !important; height: var(--dsz, 64px) !important; }
+  #stage #total { font-size: clamp(56px, 16vw, 110px); }
 </style>
 </head>
 <body>
@@ -278,6 +289,33 @@
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
   }
+</script>
+<script>
+  /* ---------- FULL-SCREEN ROLL VIEW ---------- */
+  const stage = document.createElement("div");
+  stage.id = "stage";
+  stage.innerHTML = '<div class="stageTop"><button id="backBtn" onclick="closeStage()">\u2190 Back</button><span id="stagePool"></span></div><div id="stageBody"></div><button class="roll" id="againBtn" onclick="roll()">Roll again</button>';
+  document.body.appendChild(stage);
+  // Move the existing result elements into the full-screen view (the roll code keeps writing to them)
+  ["results", "total", "note", "break"].forEach(id => document.getElementById("stageBody").appendChild(document.getElementById(id)));
+  [...document.querySelectorAll("h2")].forEach(h => { if (h.textContent.trim() === "Result") h.remove(); });
+
+  function openStage() { stage.classList.add("show"); document.body.style.overflow = "hidden"; }
+  function closeStage() { stage.classList.remove("show"); document.body.style.overflow = ""; }
+  // Pick the biggest dice size that fits all the dice on this screen
+  function sizeDice() {
+    const n = document.getElementById("results").children.length || 1, W = innerWidth - 32, H = innerHeight * 0.5;
+    let best = 40;
+    for (let c = 1; c <= n; c++) best = Math.max(best, Math.min(W / c, H / Math.ceil(n / c)) - 12);
+    document.getElementById("results").style.setProperty("--dsz", Math.min(best, 260) + "px");
+  }
+  const _roll = roll;
+  roll = function () {
+    if (rolling || !DICE.some(n => counts[n])) return;
+    openStage(); _roll(); sizeDice();
+    document.getElementById("stagePool").textContent = typeof poolText === "function" ? poolText() : "";
+  };
+  addEventListener("resize", sizeDice);
 </script>
 </body>
 </html>

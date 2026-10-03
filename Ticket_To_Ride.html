@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest-ttr.json">
+<meta name="theme-color" content="#1e40af">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-ttr-192.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ticket to Ride Score Calculator</title>
+<style>
+  /* Self-contained: no outside files. */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; min-height: 100vh; color: #fff; touch-action: manipulation; font-family: ui-rounded, "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(circle at top, #1e3a8a 0%, #0f172a 75%);
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  h1 { margin: 0 0 10px; font-size: 22px; letter-spacing: .05em; text-transform: uppercase; }
+  h2 { margin: 18px 0 8px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #93c5fd; }
+  #players { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { flex: 1 1 28%; background: rgba(15,23,42,.75); border: 2px solid #334155; border-radius: 14px; padding: 8px 6px; text-align: center; border-top-width: 6px; }
+  .chip.on { border-color: #fbbf24; background: #1e293b; }
+  .chip b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip span { font-size: 22px; font-weight: 900; color: #fde68a; }
+  .add { flex: 0 0 auto; align-self: stretch; padding: 0 16px; background: transparent; border: 2px dashed #64748b; border-radius: 14px; font-size: 22px; font-weight: 900; }
+  #alert { display: none; margin-top: 10px; text-align: center; font-weight: 900; background: #ef4444; border-radius: 14px; padding: 10px; }
+  #alert.show { display: block; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; margin-bottom: 6px; padding: 6px 12px; width: 100%;
+         background: rgba(15,23,42,.75); border: 1px solid #334155; border-radius: 12px; text-align: left; }
+  .lbl { flex: 1; } .lbl b { display: block; font-size: 16px; } .lbl small { color: #94a3b8; font-size: 12px; }
+  .val { min-width: 52px; text-align: right; font-size: 24px; font-weight: 900; color: #fde68a; }
+  .ctl { display: flex; align-items: center; gap: 6px; }
+  .ctl button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: #334155; font-size: 20px; font-weight: 900; }
+  .ctl button:active { background: #475569; }
+  .ctl span { min-width: 26px; text-align: center; font-size: 20px; font-weight: 900; }
+  .sub { background: rgba(30,64,175,.45); border-color: #3b82f6; }
+  .on-row { border-color: #fbbf24; background: #1e293b; }
+  .tk { display: inline-block; margin: 4px 6px 0 0; padding: 6px 10px; background: #fbbf24; color: #000; border-radius: 10px; font-weight: 900; }
+  .tk.bad { background: #f87171; }
+  .mini { padding: 8px 12px; background: #334155; border: 0; border-radius: 10px; font-weight: 800; }
+  .grand { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 14px 16px; border-radius: 16px; background: #fbbf24; color: #000; font-weight: 900; font-size: 18px; text-transform: uppercase; }
+  .grand span { font-size: 40px; }
+  .tools { display: flex; gap: 8px; margin-top: 18px; }
+  .tools button { flex: 1; background: #1e293b; border: 1px solid #475569; border-radius: 12px; padding: 12px 6px; font-size: 13px; font-weight: 800; text-transform: uppercase; }
+  .tools .danger { border-color: #be123c; color: #fda4af; }
+  details { margin-top: 16px; background: rgba(15,23,42,.75); border: 1px solid #334155; border-radius: 12px; padding: 10px 14px; font-size: 14px; color: #cbd5e1; }
+  summary { cursor: pointer; font-weight: 800; }
+  #sheet { display: none; position: fixed; inset: 0; z-index: 10; background: rgba(2,6,23,.7); align-items: flex-end; justify-content: center; }
+  #sheet.show { display: flex; }
+  .panel { width: 100%; max-width: 520px; background: #1e293b; border-radius: 22px 22px 0 0; padding: 16px 14px max(16px, env(safe-area-inset-bottom)); }
+  .panel h3 { margin: 0 0 10px; }
+  .opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 8px; }
+  .opts button { padding: 14px 0; font-size: 20px; font-weight: 900; border: 0; border-radius: 12px; background: #fbbf24; color: #000; }
+  .panel .cancel { width: 100%; margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px solid #64748b; background: transparent; font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>&#128642; Ticket to Ride Score</h1>
+  <div id="players"></div>
+  <div id="alert"></div>
+  <h2 id="who">Routes</h2><div id="routes"></div>
+  <h2>Destination Tickets</h2><div id="tickets"></div>
+  <h2>Bonuses</h2><div id="bonus"></div>
+  <div id="totals"></div>
+  <div class="tools">
+    <button onclick="renamePlayer()">&#9998; Rename</button>
+    <button onclick="removePlayer()">&minus; Remove</button>
+    <button class="danger" onclick="newGame()">New Game</button>
+  </div>
+  <details><summary>Scoring cheat sheet</summary>
+    <p>Route points: 1 train = 1, 2 = 2, 3 = 4, 4 = 7, 5 = 10, 6 = 15, 7 = 18, 8 = 21.<br>
+    Completed tickets add their value; unfinished tickets subtract it.<br>
+    Longest continuous route: +10 (ties: everyone tied gets it).<br>
+    Europe: each unused station = +4. Final round starts when a player has 2 or fewer trains left.</p>
+  </details>
+</div>
+
+<div id="sheet" onclick="if (event.target === this) closePick()">
+  <div class="panel"><h3 id="pTitle"></h3><div class="opts" id="pOpts"></div><button class="cancel" onclick="closePick()">Cancel</button></div>
+</div>
+
+<script>
+  /* ---------- RULES (edit here for other editions) ---------- */
+  const PTS = { 1: 1, 2: 2, 3: 4, 4: 7, 5: 10, 6: 15, 7: 18, 8: 21 };   // points per route length
+  const TRAINS = 45, LONGEST = 10, STATION_PTS = 4, MAX_PLAYERS = 5;
+  const COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#facc15", "#94a3b8"];
+
+  /* ---------- STATE (saved on the phone) ---------- */
+  const KEY = "ttr_v1", $ = id => document.getElementById(id);
+  const blank = n => ({ name: "Player " + n, r: {}, done: [], fail: [], lr: false, st: 0 });
+  let players = [blank(1), blank(2)], active = 0, pending = null;
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ players, active })); } catch (e) {} };
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.players && d.players.length) { players = d.players; active = Math.min(d.active || 0, players.length - 1); } } catch (e) {}
+
+  /* ---------- THE MATH ---------- */
+  const sum = a => a.reduce((t, v) => t + v, 0);
+  function calc(p) {
+    const lens = Object.keys(PTS).map(Number);
+    const routes = sum(lens.map(l => (p.r[l] || 0) * PTS[l])), used = sum(lens.map(l => (p.r[l] || 0) * l));
+    const tix = sum(p.done) - sum(p.fail), bonus = p.lr ? LONGEST : 0, stations = p.st * STATION_PTS;
+    return { routes, used, left: TRAINS - used, tix, bonus, stations, total: routes + tix + bonus + stations };
+  }
+
+  /* ---------- SCREEN ---------- */
+  function render() {
+    const S = players.map(calc), best = Math.max(...S.map(s => s.total));
+    $("players").innerHTML = players.map((p, i) =>
+      `<div class="chip ${i === active ? "on" : ""}" style="border-top-color:${COLORS[i % 5]}" onclick="active=${i};save();render()"><b>${best > 0 && S[i].total === best ? "&#9819; " : ""}${esc(p.name)}</b><span>${S[i].total}</span></div>`
+    ).join("") + (players.length < MAX_PLAYERS ? `<button class="add" onclick="addPlayer()">+</button>` : "");
+
+    const low = players.filter((p, i) => S[i].used > 0 && S[i].left <= 2);
+    $("alert").classList.toggle("show", low.length > 0);
+    if (low.length) $("alert").innerHTML = `&#9888; Final round! ${low.map(p => esc(p.name)).join(", ")} ${low.length > 1 ? "have" : "has"} 2 or fewer trains left.`;
+
+    const p = players[active], s = S[active];
+    $("who").textContent = p.name + " \u2014 Routes";
+    $("routes").innerHTML = Object.keys(PTS).map(l => {
+      const c = p.r[l] || 0;
+      return `<div class="row"><span class="lbl"><b>${l}-train route${c ? " \u00D7 " + c : ""}</b><small>${PTS[l]} pt${PTS[l] > 1 ? "s" : ""} each</small></span>
+        <span class="ctl"><button onclick="adj(${l},-1)">&minus;</button><span>${c}</span><button onclick="adj(${l},1)">+</button></span><span class="val">${c * PTS[l]}</span></div>`;
+    }).join("") +
+      `<div class="row sub"><span class="lbl"><b>Trains used</b><small>${s.left} of ${TRAINS} left</small></span><span class="val">${s.used}</span></div>
+       <div class="row sub"><span class="lbl"><b>Route points</b></span><span class="val">${s.routes}</span></div>`;
+
+    const tk = (arr, kind, bad) => arr.map((v, i) => `<span class="tk ${bad ? "bad" : ""}" onclick="rmTk('${kind}',${i})">${bad ? "\u2212" : "+"}${v} \u2715</span>`).join("");
+    $("tickets").innerHTML =
+      `<div class="row" style="display:block"><div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl"><b>Completed</b><small>Tap a chip to remove it</small></span><button class="mini" onclick="openPick('done')">+ Add</button></div>${tk(p.done, "done", false)}</div>
+       <div class="row" style="display:block"><div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl"><b>Not completed</b><small>These subtract points</small></span><button class="mini" onclick="openPick('fail')">+ Add</button></div>${tk(p.fail, "fail", true)}</div>
+       <div class="row sub"><span class="lbl"><b>Ticket points</b></span><span class="val">${s.tix}</span></div>`;
+
+    $("bonus").innerHTML =
+      `<button class="row ${p.lr ? "on-row" : ""}" onclick="toggleLR()"><span class="lbl"><b>Longest continuous route</b><small>${p.lr ? "Yes!" : "Tap if " + p.name + " has it"} (+${LONGEST})</small></span><span class="val">${s.bonus}</span></button>
+       <div class="row"><span class="lbl"><b>Unused stations</b><small>Europe only, ${STATION_PTS} pts each</small></span>
+        <span class="ctl"><button onclick="stAdj(-1)">&minus;</button><span>${p.st}</span><button onclick="stAdj(1)">+</button></span><span class="val">${s.stations}</span></div>`;
+
+    $("totals").innerHTML = `<div class="grand">Total<span>${s.total}</span></div>`;
+  }
+
+  /* ---------- ACTIONS ---------- */
+  const cur = () => players[active];
+  function adj(l, d) { const p = cur(); p.r[l] = Math.max(0, (p.r[l] || 0) + d); save(); render(); if (navigator.vibrate) navigator.vibrate(8); }
+  function stAdj(d) { const p = cur(); p.st = Math.max(0, Math.min(3, p.st + d)); save(); render(); }
+  function toggleLR() { cur().lr = !cur().lr; save(); render(); }
+  function openPick(kind) {
+    pending = kind; $("pTitle").textContent = kind === "done" ? "Completed ticket value" : "Uncompleted ticket value (subtracts)";
+    $("pOpts").innerHTML = Array.from({ length: 30 }, (_, i) => `<button onclick="pickTk(${i + 1})">${i + 1}</button>`).join("");
+    $("sheet").classList.add("show");
+  }
+  function closePick() { $("sheet").classList.remove("show"); pending = null; }
+  function pickTk(v) { cur()[pending].push(v); closePick(); save(); render(); }
+  function rmTk(kind, i) { cur()[kind].splice(i, 1); save(); render(); }
+
+  function addPlayer() { players.push(blank(players.length + 1)); active = players.length - 1; save(); render(); renamePlayer(); }
+  function renamePlayer() { const n = prompt("Player name:", cur().name); if (n && n.trim()) { cur().name = n.trim().slice(0, 14); save(); render(); } }
+  function removePlayer() { if (players.length > 1 && confirm("Remove " + cur().name + "?")) { players.splice(active, 1); active = 0; save(); render(); } }
+  function newGame() {
+    if (confirm("Start a new game? All scores will be cleared (player names stay).")) { players = players.map(p => Object.assign(blank(0), { name: p.name })); save(); render(); }
+  }
+
+  let lock = null;
+  async function wake() { try { if ("wakeLock" in navigator) lock = await navigator.wakeLock.request("screen"); } catch (e) {} }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") wake(); });
+  document.addEventListener("pointerdown", wake, { once: true });
+  render(); wake();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "id": "/BoardGames/ticket-to-ride",
+  "name": "Ticket to Ride Score",
+  "short_name": "TTR Score",
+  "description": "Score calculator for Ticket to Ride",
+  "start_url": "./Ticket_To_Ride.html",
+  "scope": "./Ticket_To_Ride.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1e40af",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "icon-ttr-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-ttr-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
