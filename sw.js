@@ -2,16 +2,16 @@
 // Games update automatically: users get the new version the next time
 // they open a game after being online (the second open, to be exact).
 
-const CACHE = "boardgames-v2";
+const CACHE = "boardgames-v3";
 
 // 1) Your own files. Add any new game files to this list when you upload them.
 const FILES = [
   "./",
   "./index.html",
-  "./Clue Junior Scorecard - v2.html",
-  "./Clue Junior Scorecard.html",
+  "./ClueJuniorScorecard.html",
+  "./ClueJuniorScorecard2.html",
   "./Clue-Original.html",
-  "./Sorry! Mobile Deck.html",
+  "./Sorry_Mobile_Deck.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
