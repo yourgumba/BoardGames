@@ -1,0 +1,26 @@
+{
+  "id": "/BoardGames/junior-detective",
+  "name": "Junior Detective Notebook",
+  "short_name": "Jr Detective",
+  "description": "Detective notebook for Junior Detective: suspects, clues, hiding spots",
+  "start_url": "./Junior_Detective.html",
+  "scope": "./Junior_Detective.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e7490",
+  "theme_color": "#0e7490",
+  "icons": [
+    {
+      "src": "icon-jd-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-jd-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

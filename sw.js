@@ -2,7 +2,7 @@
 // Games update automatically: users get the new version the next time
 // they open a game after being online (the second open, to be exact).
 
-const CACHE = "boardgames-v10";
+const CACHE = "boardgames-v12";
 
 // 1) Your own files. Add any new game files to this list when you upload them.
 const FILES = [
@@ -44,7 +44,11 @@ const FILES = [
   "./Ticket_To_Ride.html",
   "./manifest-ttr.json",
   "./icon-ttr-192.png",
-  "./icon-ttr-512.png"
+  "./icon-ttr-512.png",
+  "./Junior_Detective.html",
+  "./manifest-jd.json",
+  "./icon-jd-192.png",
+  "./icon-jd-512.png"
 ];
 
 // 2) Outside files your games use (scripts and icons).
